@@ -1,0 +1,15 @@
+{
+  "name": "anshumanvyas-dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Personal site for Anshuman Vyas",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && npx --yes serve . -l 5173"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.185.1"
+  }
+}
