@@ -33,10 +33,17 @@ const AMBER  = 0xff9e4a;
 const SLATE  = 0x5c6b88;
 const PALE   = 0xe8edf7;
 
-// 1 world unit equals this many km, per act.
-const S1 = 1e4;   // act 1: Earth neighbourhood
-const S2 = 1e6;   // act 2: heliocentric
-const S3 = 1e5;   // act 3: around L1
+// ONE world scale for all three acts: 1 unit = 100,000 km.
+//
+// Each act used to have its own, which kept the numbers comfortable but made
+// the cross-fades incoherent: while two acts are both on screen the camera can
+// only be positioned in one act's units, so the other renders at ten times the
+// wrong size. Sharing a scale and translating each act's group into its real
+// place means any two acts can be shown together and simply agree. Depth
+// precision, the original reason for per-act scales, is handled by setting the
+// near and far planes from the camera distance every frame instead.
+const WORLD = 1e5;
+const S1 = WORLD, S2 = WORLD, S3 = WORLD;
 
 const M = DATA.meta;
 
@@ -49,9 +56,20 @@ const ACTS = [
 const DUR = ACTS[ACTS.length - 1].t1;
 
 const A1_INTRO = 1.3;
-const A1_ORBIT = 2.05;
-const A1_ESC0  = A1_INTRO + 5 * A1_ORBIT;   // 11.55
-const A1_ESC1  = ACTS[0].t1;
+// The five orbits do not get equal time. Their real periods run from about
+// 7.6 hours to 44, and giving the big ones a little longer stops the last two
+// feeling rushed while keeping the whole act the same length.
+const A1_W = (() => {
+  const weight = [0.84, 0.88, 1.0, 1.12, 1.16];
+  const total = 10.25;
+  const sum = weight.reduce((a, b) => a + b, 0);
+  const out = [];
+  let t = A1_INTRO;
+  for (const w of weight) { const d = total * w / sum; out.push([t, t + d]); t += d; }
+  return out;
+})();
+const A1_ESC0 = A1_W[4][1];
+const A1_ESC1 = ACTS[0].t1;
 
 const smooth = (x) => x * x * (3 - 2 * x);
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
@@ -121,9 +139,57 @@ function polyline(pts, scale, color, opacity) {
   return line;
 }
 
+/** Cumulative arc length along a polyline, for speed warping. */
+function arcTable(pts, scale) {
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) {
+    cum.push(cum[i - 1] + Math.hypot(
+      (pts[i][0] - pts[i - 1][0]) / scale,
+      (pts[i][1] - pts[i - 1][1]) / scale,
+      (pts[i][2] - pts[i - 1][2]) / scale));
+  }
+  return { cum, L: cum[cum.length - 1] };
+}
+
+/** Index at a given fraction of total arc length (binary search). */
+function indexAtArc(tab, u) {
+  const target = u * tab.L;
+  let lo = 0, hi = tab.cum.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (tab.cum[mid] < target) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
+/** Fractional index at normalised time u, from the stored timestamps. */
+function indexAtTime(tn, u) {
+  let lo = 0, hi = tn.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (tn[mid] < u) lo = mid + 1; else hi = mid; }
+  if (lo === 0) return 0;
+  const a = tn[lo - 1], b = tn[lo];
+  return (lo - 1) + (b > a ? (u - a) / (b - a) : 0);
+}
+
+// These orbits are extremely eccentric: the last one runs from a 6,613 km
+// perigee out to 128,351 km, and the craft covers half its orbit in a sliver of
+// the period. Animated at the physically correct speed it crosses perigee
+// between two frames, which reads as a glitch rather than as speed. The index
+// is therefore blended toward constant screen speed: perigee stays visibly the
+// fast part, but it happens over frames a viewer can follow.
+const SPEED_BLEND = 0.75;
+function warpedIndex(tn, tab, u) {
+  return MathUtils.lerp(indexAtTime(tn, u), indexAtArc(tab, u), SPEED_BLEND);
+}
+
 function at(pts, scale, i) {
-  const k = MathUtils.clamp(Math.round(i), 0, pts.length - 1);
-  return new Vector3(pts[k][0] / scale, pts[k][1] / scale, pts[k][2] / scale);
+  // Interpolated, not rounded. Snapping to the nearest sample makes the craft
+  // advance in visible steps whenever the polyline is coarse relative to the
+  // frame, which it is at the start of the heliocentric leg.
+  const c = MathUtils.clamp(i, 0, pts.length - 1);
+  const k = Math.floor(c), f = c - k, k2 = Math.min(k + 1, pts.length - 1);
+  return new Vector3(
+    MathUtils.lerp(pts[k][0], pts[k2][0], f) / scale,
+    MathUtils.lerp(pts[k][1], pts[k2][1], f) / scale,
+    MathUtils.lerp(pts[k][2], pts[k2][2], f) / scale
+  );
 }
 
 /** Soft round dot, used for every marker and glow. */
@@ -198,7 +264,7 @@ function setFade(group, o) {
 {
   const n = 800, a = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
-    const r = 4000 + Math.random() * 3000;
+    const r = 600 + Math.random() * 250;
     const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
     a[i * 3] = r * Math.sin(ph) * Math.cos(th);
     a[i * 3 + 1] = r * Math.cos(ph);
@@ -210,17 +276,26 @@ function setFade(group, o) {
     color: PALE, size: 1.8, sizeAttenuation: false, transparent: true, opacity: 0.5
   }));
   stars.frustumCulled = false;
-  scene.add(stars);
+  // Parented to the camera, so they behave as a backdrop at every zoom level.
+  // Left in the scene they would sit at a fixed distance from the Sun and the
+  // camera would fly through them during the wide shots.
+  camera.add(stars);
+  scene.add(camera);
 }
 
 /* ================================================================== act 1 */
 const A1 = new Group();
+// Earth-centred geometry, parked at Earth's position at the start of the
+// transfer (the frame angle is zero there, so no rotation is needed).
+A1.position.x = M.earthRotKm / WORLD;
 world.add(A1);
 
 const rE1 = M.earthRadiusKm / S1;
 A1.add(ball(rE1, 0x0d2136, 1));
 A1.add(wireGlobe(rE1, ACCENT, 0.55));
 
+const raiseArcs = DATA.raises.map((r) => arcTable(r.pts, S1));
+const escapeArc = arcTable(DATA.escape, S1);
 const raiseLines = DATA.raises.map((r, i) =>
   polyline(r.pts, S1, i === 0 ? SLATE : ACCENT, i === 0 ? 0.5 : 0.75));
 raiseLines.forEach((l) => { l.geometry.setDrawRange(0, 0); A1.add(l); });
@@ -248,13 +323,17 @@ world.add(A2);
 // Neither body is to scale here; at this zoom the real Sun would be a pixel.
 A2.add(dot(AMBER, 0.055, 0.95));
 A2.add(dot(AMBER, 0.16, 0.20, true));
+// The heliocentric leg was computed against a 1.496e8 km AU and the CR3BP
+// against 149,597,870.7. Draw Earth at the CR3BP value in both acts so the two
+// agree exactly at the handover; the 25,786 km that pushes into the transfer
+// arc is 0.017% of this frame.
 { // full circle, not just the arc Earth covers during the transfer: at this
   // zoom the transfer arc and Earth's path differ by about 1%, so the partial
   // arc was invisible underneath it. The ring is what gives the scene scale.
   const ring = [];
   for (let i = 0; i <= 256; i++) {
     const a = (i / 256) * Math.PI * 2;
-    ring.push([Math.cos(a) * M.auKm, Math.sin(a) * M.auKm, 0]);
+    ring.push([Math.cos(a) * M.earthRotKm, Math.sin(a) * M.earthRotKm, 0]);
   }
   A2.add(polyline(ring, S2, SLATE, 0.3));
 }
@@ -265,11 +344,17 @@ A2.add(arcLine);
 
 const earth2 = dot(0x6ba8e8, 0.022);
 const craft2 = dot(PALE, 0.014);
-A2.add(earth2, craft2);
+// L1 itself, so the dive at the end of the act closes on something rather than
+// on empty space. It rides inside A2, so the de-spin carries it correctly.
+const l1mark2 = dot(AMBER, 0.013, 0.85);
+A2.add(earth2, craft2, l1mark2);
 markBase(A2);
 
 /* ================================================================== act 3 */
 const A3 = new Group();
+// L1-relative geometry, parked at L1 in the rotating frame that act 2 de-spins
+// into, so the two coincide exactly through the handover.
+A3.position.x = M.xL1Km / WORLD;
 world.add(A3);
 
 // L1 sits at the origin of act 3; Earth goes along +x at the real offset.
@@ -297,10 +382,13 @@ const haloLine = polyline(haloRel, S3, ACCENT, 0.95);
 haloLine.geometry.setDrawRange(0, 0);
 A3.add(haloLine);
 
-// Just the final stretch of the cruise, de-spun into the rotating frame, so the
-// craft is seen arriving from somewhere rather than appearing on the halo.
+// The last stretch of the cruise, de-spun into the rotating frame. Act 2 stops
+// the craft here and act 3 picks it up at exactly this sample, so the handover
+// continues the same journey instead of rewinding it.
+const TAIL_N = 26;
+const ARC_STOP = DATA.transfer.length - TAIL_N;   // index act 2 animates up to
 const cosT = Math.cos(-M.thetaTransfer), sinT = Math.sin(-M.thetaTransfer);
-const tailRel = DATA.transfer.slice(-11).map((p) => [
+const tailRel = DATA.transfer.slice(ARC_STOP).map((p) => [
   p[0] * cosT - p[1] * sinT - M.xL1Km,
   p[0] * sinT + p[1] * cosT,
   p[2]
@@ -313,19 +401,22 @@ A3.add(craft3, burn3);
 markBase(A3);
 
 /* --------------------------------------------------------------- captions */
+const fmt = (n) => n.toLocaleString('en-US');
 const CAPTIONS = [
-  [0.0,   'Parking orbit',                     '235 × 19,500 km, inclined 19.2°'],
-  [1.3,   'Burn 1 at perigee',                 'apogee → 22,459 km'],
-  [3.35,  'Burn 2 at perigee',                 'apogee → 40,225 km'],
-  [5.4,   'Burn 3 at perigee',                 'apogee → 71,767 km'],
-  [7.45,  'Burn 4 at perigee',                 'apogee → 121,973 km'],
-  [9.5,   'Coasting to perigee',               'the Oberth effect makes this the cheapest place to burn'],
-  [11.55, 'Escape burn',                       `${M.escapeDvMs} m/s, and Earth no longer holds it'`],
-  [13.4,  'Crossing the sphere of influence',  '925,000 km, 9.2 days after the burn'],
+  [0.0,          'Parking orbit',       '235 × 19,500 km, inclined 19.2°'],
+  [A1_W[1][0],   'Burn 1 at perigee',   `apogee → ${fmt(M.raiseApogees[1])} km`],
+  [A1_W[2][0],   'Burn 2 at perigee',   `apogee → ${fmt(M.raiseApogees[2])} km`],
+  [A1_W[3][0],   'Burn 3 at perigee',   `apogee → ${fmt(M.raiseApogees[3])} km`],
+  [A1_W[4][0],   'Burn 4 at perigee',   `apogee → ${fmt(M.raiseApogees[4])} km`],
+  [A1_W[4][0] + 1.1, 'Coasting to perigee', 'the Oberth effect makes this the cheapest place to burn'],
+  [A1_ESC0,      'Escape burn',         `${M.escapeDvMs} m/s, and Earth no longer holds it`],
+  [A1_ESC0 + 1.9, 'Crossing the sphere of influence',
+                  `925,000 km, ${M.escapeDays.toFixed(1)} days after the burn`],
   [15.5,  'Heliocentric frame',                'Earth’s orbital motion is the spacecraft’s too'],
   [17.6,  'Lambert transfer arc',              '110 days from the sphere of influence to L1'],
-  [23.5,  'Sun, Earth, spacecraft',            'the whole transfer in one frame'],
-  [27.0,  'Locking to the rotating frame',     'Earth held fixed on the Sun–Earth line'],
+  [21.0,  'Sun, Earth, spacecraft',            'the whole transfer in one frame'],
+  [22.6,  'Locking to the rotating frame',     'Earth held fixed on the Sun–Earth line'],
+  [26.4,  'Closing on L1',                     'the destination is 1.5 million km sunward of Earth'],
   [29.0,  'Arrival at L1',                     '1,491,551 km sunward of Earth'],
   [30.6,  'Insertion burn',                    '265 m/s onto the halo'],
   [32.6,  'Halo orbit',                        'A_z = 120,000 km, one lap every 177.9 days'],
@@ -348,7 +439,7 @@ function caption(t) {
 }
 
 function missionDay(t) {
-  if (t < A1_ESC0) return (t / A1_ESC0) * 4.6;
+  if (t < A1_ESC0) return (t / A1_ESC0) * 4.6;   // the five orbits, ~4.6 days
   if (t < ACTS[0].t1) return 4.6 + span(t, A1_ESC0, ACTS[0].t1) * M.escapeDays;
   if (t < ACTS[1].t1) return 4.6 + M.escapeDays + span(t, ACTS[1].t0, ACTS[1].t1) * M.transferDays;
   return 4.6 + M.escapeDays + M.transferDays + span(t, ACTS[2].t0 + 1.6, ACTS[2].t1) * M.haloDays * 2;
@@ -372,27 +463,6 @@ function bounds(pts, scale) {
   return { c: toWorld(c), r };
 }
 
-// Frame each raise on the ellipse itself rather than on Earth: an ellipse's
-// far side is twice as far as its semi-major axis, so centring on Earth wastes
-// half the frame.
-const RB = DATA.raises.map((x) => bounds(x.pts, S1));
-const EB = bounds(DATA.escape, S1);
-
-const R1_KEYS = (() => {
-  const k = [[0, RB[0].r * 1.2]];
-  for (let i = 0; i < 5; i++) k.push([A1_INTRO + i * A1_ORBIT - 0.3, RB[i].r * 1.2]);
-  k.push([A1_ESC0 - 0.2, RB[4].r * 1.2]);
-  k.push([A1_ESC1, EB.r * 1.1]);
-  return k;
-})();
-const T1_KEYS = (() => {
-  const k = [[0, RB[0].c]];
-  for (let i = 0; i < 5; i++) k.push([A1_INTRO + i * A1_ORBIT - 0.3, RB[i].c]);
-  k.push([A1_ESC0 - 0.2, RB[4].c]);
-  k.push([A1_ESC1, EB.c]);
-  return k;
-})();
-
 /** Same as track(), for Vector3 keyframes. */
 function trackVec(keys, t, out) {
   if (t <= keys[0][0]) return out.copy(keys[0][1]);
@@ -404,52 +474,151 @@ function trackVec(keys, t, out) {
   return out.copy(keys[keys.length - 1][1]);
 }
 
-const R2_KEYS = [
-  [ACTS[1].t0,       10],
-  [ACTS[1].t0 + 2.2, 34],
-  [ACTS[1].t1 - 4.0, M.auKm / S2 * 1.18],
-  [ACTS[1].t1,       M.auKm / S2 * 1.18]
+/* --- one continuous camera, not three -------------------------------------
+ * Each act used to own its framing, which meant the apparent scale and the
+ * view direction both jumped at every handover. Everything below is defined
+ * once across the whole timeline instead:
+ *
+ *   - the framing radius is in KILOMETRES and interpolated in log space, so a
+ *     190x zoom-out reads as a steady dolly rather than a lurch, and the value
+ *     either side of an act boundary is the same real distance;
+ *   - azimuth and elevation are single continuous tracks, so the view direction
+ *     never snaps;
+ *   - at each boundary the camera targets Earth, which exists in both acts, so
+ *     the cross-fade happens with the same object in the same place at the same
+ *     size on screen.
+ */
+const T_HANDOVER_1 = ACTS[0].t1;    // Earth-centred -> heliocentric
+const T_HANDOVER_2 = ACTS[1].t1;    // heliocentric -> rotating frame at L1
+const R_HANDOVER_1 = M.soiKm * 1.15;         // km in frame at handover 1
+const R_HANDOVER_2 = 2.0e6;                  // floor only; the approach rule wins
+
+// Frame each raise on the ellipse itself rather than on Earth: an ellipse's far
+// side is twice as far as its semi-major axis, so centring on Earth wastes half
+// the frame.
+const RB = DATA.raises.map((x) => bounds(x.pts, S1));
+
+// Framing radius in km, across the whole run.
+const R_KM = (() => {
+  const k = [[0, RB[0].r * S1 * 1.22]];
+  for (let i = 0; i < 5; i++) k.push([A1_W[i][0] - 0.3, RB[i].r * S1 * 1.22]);
+  k.push([A1_ESC0 - 0.2, RB[4].r * S1 * 1.22]);
+  k.push([T_HANDOVER_1, R_HANDOVER_1]);
+  k.push([ACTS[1].t0 + 2.6, 6.5e6]);
+  k.push([ACTS[1].t1 - 5.0, M.earthRotKm * 1.2]);
+  k.push([ACTS[1].t1 - 2.6, M.earthRotKm * 1.2]);
+  k.push([T_HANDOVER_2, R_HANDOVER_2]);
+  k.push([ACTS[2].t0 + 4.2, 9.7e5]);
+  k.push([ACTS[2].t0 + 5.4, 9.7e5]);
+  k.push([ACTS[2].t1, 9.7e5]);
+  return k;
+})();
+
+/** Log-space interpolation: constant zoom RATE rather than constant km/second. */
+function radiusKm(t) {
+  const k = R_KM;
+  if (t <= k[0][0]) return k[0][1];
+  for (let i = 1; i < k.length; i++) {
+    if (t <= k[i][0]) {
+      const f = smooth(span(t, k[i - 1][0], k[i][0]));
+      return Math.exp(MathUtils.lerp(Math.log(k[i - 1][1]), Math.log(k[i][1]), f));
+    }
+  }
+  return k[k.length - 1][1];
+}
+
+const AZ_KEYS = [
+  [0, 0.55], [A1_ESC0, 1.35], [T_HANDOVER_1, 1.55],
+  [ACTS[1].t0 + 4, 1.25], [ACTS[1].t1 - 4.6, 0.42],
+  [T_HANDOVER_2, 0.05], [ACTS[2].t0 + 5, -0.42], [ACTS[2].t1, -0.72]
+];
+const EL_KEYS = [
+  [0, 0.5], [A1_ESC0, 0.3], [T_HANDOVER_1, 0.28],
+  [ACTS[1].t0 + 5, 0.5], [ACTS[1].t1 - 4.6, 0.66],
+  [T_HANDOVER_2, 0.44], [ACTS[2].t0 + 5, 0.3], [ACTS[2].t1, 0.4]
 ];
 
-const R3_KEYS = [
-  [ACTS[2].t0,       6],
-  [ACTS[2].t0 + 4.0, 9.6],
-  [ACTS[2].t1,       9.6]
-];
-// The halo's loop lies roughly in the plane normal to the Sun-Earth line, so
-// looking down that line shows it face-on. Straight down it would hide Earth
-// behind the camera, so the view sits about 35 degrees off it.
+// The halo loop lies roughly in the plane normal to the Sun-Earth line, so the
+// view settles about 35 degrees off that line: enough to open the loop out
+// without putting Earth behind the camera.
 const A3_TARGET_X = dxEarth * 0.46;
+
+/* The approach to L1 is wildly non-linear: the spacecraft is still 17 million km
+ * out at 94% of the arc and covers the last 3 million in the final one percent.
+ * No fixed zoom schedule can follow that, so through the arrival the framing
+ * radius is driven by the actual distance left to run and the schedule acts
+ * only as a floor. The zoom then tracks the approach by construction, and the
+ * radius is continuous across the handover because the craft's position is.
+ */
+const APPROACH_MARGIN = 1.45;
+
+function frameRadiusKm(t) {
+  const scheduled = radiusKm(t);
+  if (t >= ACTS[1].t1 - 3.2 && t < T_HANDOVER_2) {
+    craft2.getWorldPosition(tmpA);
+    l1mark2.getWorldPosition(tmpB);
+    return Math.max(scheduled, tmpA.distanceTo(tmpB) * WORLD * APPROACH_MARGIN);
+  }
+  if (t >= T_HANDOVER_2 && t < ACTS[2].t0 + 4.2) {
+    craft3.getWorldPosition(tmpA).sub(A3.position);     // distance from L1
+    return Math.max(scheduled, tmpA.length() * WORLD * APPROACH_MARGIN);
+  }
+  return scheduled;
+}
 
 const camPos = new Vector3();
 const camTgt = new Vector3();
+const tmpA = new Vector3();
+const tmpB = new Vector3();
+const tmpV = new Vector3();
+const tmpW = new Vector3();
+const ORIGIN = new Vector3(0, 0, 0);
 const orbit = (az, el, d, out) =>
   out.set(Math.cos(az) * Math.cos(el) * d, Math.sin(el) * d, Math.sin(az) * Math.cos(el) * d);
 
 function placeCamera(t) {
-  if (t < ACTS[0].t1) {
-    const g = span(t, 0, ACTS[0].t1);
-    trackVec(T1_KEYS, t, camTgt);
-    orbit(0.55 + g * 1.25, MathUtils.lerp(0.5, 0.28, smooth(g)), fitDistance(track(R1_KEYS, t)), camPos);
-    camPos.add(camTgt);
-    return;
+  if (t < T_HANDOVER_1) {
+    // Early on, frame each ellipse on itself; by the escape, on Earth, which is
+    // the anchor the next act has to match.
+    trackVec(
+      [[0, RB[0].c], ...RB.map((b, i) => [A1_W[i][0] - 0.3, b.c]),
+       [A1_ESC0 - 0.2, RB[4].c], [T_HANDOVER_1, new Vector3(0, 0, 0)]],
+      t, camTgt
+    );
+    camTgt.add(A1.position);   // act 1's geometry is offset to Earth's place
+  } else if (t < T_HANDOVER_2) {
+    scale = S2;
+    // Earth, then the Sun, then the spacecraft. Diving toward Earth instead
+    // loses the craft off the edge of the frame: it is still most of the way
+    // from Earth to L1 while the zoom is already tightening.
+    // Earth -> the Sun-Earth midpoint -> the spacecraft, as sequential lerps.
+    // Two things this must not do: run the target to the Sun (the craft then
+    // sits 150 million km outside a frame that has not widened yet, and
+    // vanishes for five seconds), or scale one vector toward the origin, which
+    // walks the target down the Sun line rather than between two points. The
+    // pan only starts once the frame is wide enough to keep the craft inside.
+    const away = smooth(span(t, ACTS[1].t1 - 8.0, ACTS[1].t1 - 5.0));
+    const back = smooth(span(t, ACTS[1].t1 - 4.0, ACTS[1].t1 - 2.6));
+    earth2.getWorldPosition(tmpV);
+    craft2.getWorldPosition(tmpW);
+    camTgt.copy(tmpV).lerp(ORIGIN, away * 0.5).lerp(tmpW, back);
+  } else {
+    // Opens on the spacecraft, which is exactly where act 2 left it, then
+    // slides to sit between Earth and L1 once the halo is the subject.
+    const f = smooth(span(t, ACTS[2].t0, ACTS[2].t0 + 4.2));
+    craft3.getWorldPosition(tmpW);
+    camTgt.set(A3_TARGET_X, 0, 0).add(A3.position).lerp(tmpW, 1 - f);
   }
-  if (t < ACTS[1].t1) {
-    const g = span(t, ACTS[1].t0, ACTS[1].t1);
-    // Start looking at the spacecraft near Earth, hand over to the Sun as the
-    // frame widens, so the zoom-out reveals rather than jumps.
-    craft2.getWorldPosition(camTgt);
-    camTgt.multiplyScalar(1 - smooth(span(t, ACTS[1].t0 + 1.4, ACTS[1].t1 - 4.5)));
-    orbit(-0.5 + g * 0.55, MathUtils.lerp(0.16, 0.72, smooth(g)), fitDistance(track(R2_KEYS, t)), camPos);
-    camPos.add(camTgt);
-    return;
-  }
-  const g = span(t, ACTS[2].t0, ACTS[2].t1);
-  orbit(MathUtils.lerp(-0.30, -0.72, smooth(g)),
-    MathUtils.lerp(0.10, 0.40, smooth(clamp01(g / 0.5))),
-    fitDistance(track(R3_KEYS, t)), camPos);
-  camTgt.set(A3_TARGET_X, 0, 0);
+
+  const dist = fitDistance(frameRadiusKm(t) / WORLD);
+  orbit(track(AZ_KEYS, t), track(EL_KEYS, t), dist, camPos);
   camPos.add(camTgt);
+
+  // Depth range follows the zoom. One fixed pair of planes cannot serve a view
+  // that ranges from 3,000 km across to 300 million.
+  camera.near = Math.max(dist * 0.004, 0.0005);
+  camera.far = Math.max(dist * 60, 4000);
+  camera.updateProjectionMatrix();
 }
 
 /* ----------------------------------------------------------------- update */
@@ -473,20 +642,21 @@ function update(t) {
   if (a1 > 0) {
     let burn = 0;
     for (let k = 0; k < 5; k++) {
-      const s = A1_INTRO + k * A1_ORBIT;
-      const f = span(t, s, s + A1_ORBIT);
-      raiseLines[k].geometry.setDrawRange(0, Math.round(f * nR[k]));
+      const f = span(t, A1_W[k][0], A1_W[k][1]);
+      const idx = warpedIndex(DATA.raises[k].tn, raiseArcs[k], f);
+      raiseLines[k].geometry.setDrawRange(0, Math.round(Math.max(f > 0 ? 2 : 0, idx)));
       if (f > 0 && f < 1) {
-        craft1.position.copy(at(DATA.raises[k].pts, S1, f * (nR[k] - 1)));
-        if (k > 0 && f < 0.14) burn = 1 - f / 0.14;
+        craft1.position.copy(at(DATA.raises[k].pts, S1, idx));
+        if (k > 0 && f < 0.12) burn = 1 - f / 0.12;
       }
     }
     if (t < A1_INTRO) craft1.position.copy(at(DATA.raises[0].pts, S1, 0));
 
     const fe = span(t, A1_ESC0, A1_ESC1);
-    escLine.geometry.setDrawRange(0, Math.round(fe * nEsc));
+    const ie = warpedIndex(DATA.escapeTn, escapeArc, fe);
+    escLine.geometry.setDrawRange(0, Math.round(fe > 0 ? Math.max(2, ie) : 0));
     if (fe > 0) {
-      craft1.position.copy(at(DATA.escape, S1, fe * (nEsc - 1)));
+      craft1.position.copy(at(DATA.escape, S1, ie));
       if (fe < 0.1) burn = Math.max(burn, 1 - fe / 0.1);
     }
     burn1.position.copy(craft1.position);
@@ -499,14 +669,15 @@ function update(t) {
                       1 - span(t, ACTS[1].t1 - 0.3, ACTS[1].t1 + 0.8));
   setFade(A2, a2);
   if (a2 > 0) {
-    const f = span(t, ACTS[1].t0, ACTS[1].t1 - 2.6);
-    arcLine.geometry.setDrawRange(0, Math.round(f * nArc));
-    craft2.position.copy(at(DATA.transfer, S2, f * (nArc - 1)));
+    const f = span(t, ACTS[1].t0, ACTS[1].t1);
+    arcLine.geometry.setDrawRange(0, Math.round(f * ARC_STOP) + 1);
+    craft2.position.copy(at(DATA.transfer, S2, f * ARC_STOP));
     const th = f * M.thetaTransfer;
-    earth2.position.set(Math.cos(th) * M.auKm / S2, Math.sin(th) * M.auKm / S2, 0);
+    earth2.position.set(Math.cos(th) * M.earthRotKm / S2, Math.sin(th) * M.earthRotKm / S2, 0);
+    l1mark2.position.set(Math.cos(th) * M.xL1Km / S2, Math.sin(th) * M.xL1Km / S2, 0);
     // De-spin at the end of the act, so the frame hands over already locked to
     // the Sun-Earth line that act 3 works in.
-    A2.rotation.z = -M.thetaTransfer * f * smooth(span(t, ACTS[1].t1 - 2.4, ACTS[1].t1));
+    A2.rotation.z = -M.thetaTransfer * f * smooth(span(t, ACTS[1].t1 - 6.5, ACTS[1].t1 - 3.8));
   }
 
   /* ---- act 3 */
@@ -621,4 +792,25 @@ if (reduce) {
   setTimeout(() => { if (!heardFromParent) { allowed = true; setPlaying(true); } }, 800);
 }
 
-window.__viewer = { seek, resize, get time() { return time; }, get playing() { return playing; }, DUR, ACTS };
+window.__viewer = {
+  seek, resize, DUR, ACTS,
+  get time() { return time; },
+  get playing() { return playing; },
+  // Small probe so the motion can be checked numerically rather than by eye.
+  probe() {
+    const craft = time < ACTS[0].t1 ? craft1 : time < ACTS[1].t1 ? craft2 : craft3;
+    // seek() does not render, so the camera's inverse matrix would otherwise be
+    // whatever the last painted frame left behind.
+    camera.updateMatrixWorld(true);
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    const w = craft.getWorldPosition(new Vector3());
+    const screen = w.clone().project(camera);
+    return {
+      camX: camera.position.x, camY: camera.position.y, camZ: camera.position.z,
+      tgtX: camTgt.x, tgtY: camTgt.y, tgtZ: camTgt.z,
+      radiusKm: frameRadiusKm(time),
+      cwX: w.x, cwY: w.y, cwZ: w.z,
+      sx: screen.x, sy: screen.y
+    };
+  }
+};

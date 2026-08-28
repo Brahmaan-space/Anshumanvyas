@@ -55,28 +55,68 @@ def thin(arr, n):
     return arr[idx]
 
 
+def resample_by_angle(sol, t_end, n):
+    """Sample a closed orbit at uniform swept ANGLE about the focus.
+
+    Sampling uniformly in time looks correct on paper and animates badly: these
+    ellipses are so eccentric that two adjacent time samples near perigee are
+    almost 60 degrees apart, and the spacecraft appears to teleport around Earth
+    rather than swing around it. Uniform angle gives even spatial resolution
+    everywhere; the normalised time of each sample is returned alongside so the
+    viewer can still animate at the physically correct speed.
+    """
+    dense = sol.sol(np.linspace(0, t_end, 6000)).T[:, :3]
+    u = dense / np.linalg.norm(dense, axis=1, keepdims=True)
+    step = np.arccos(np.clip((u[:-1] * u[1:]).sum(1), -1, 1))
+    swept = np.concatenate([[0.0], np.cumsum(step)])
+    want = np.linspace(0, swept[-1], n)
+    t_at = np.interp(want, swept, np.linspace(0, t_end, 6000))
+    pts = sol.sol(t_at).T[:, :3]
+    return pts, t_at / t_end
+
+
+def resample_by_arc(sol, t_end, n):
+    """Same idea for an open leg: uniform arc length, plus normalised time."""
+    grid = np.linspace(0, t_end, 6000)
+    dense = sol.sol(grid).T[:, :3]
+    seg = np.linalg.norm(np.diff(dense, axis=0), axis=1)
+    arc = np.concatenate([[0.0], np.cumsum(seg)])
+    want = np.linspace(0, arc[-1], n)
+    t_at = np.interp(want, arc, grid)
+    return sol.sol(t_at).T[:, :3], t_at / t_end
+
+
 def r3(a):
     return [[round(float(v), 3) for v in p] for p in a]
 
 
 # ============================================================ phase 1: raises
-# Every burn happens at the same physical perigee point: position cannot jump,
-# only speed changes. That is why r0 is computed once and reused.
-r0 = ROT @ np.array([RE + STAGES[0][0], 0.0, 0.0])
+# Each stage starts at its OWN perigee radius from the maneuver table, along the
+# same direction, so every ellipse really has the perigee and apogee the report
+# publishes and closes exactly in one period.
+#
+# The MATLAB reuses stage 1's perigee POSITION for all five stages while taking
+# each stage's perigee RADIUS for the vis-viva speed. The two disagree, so one
+# nominal period does not return to the start: stage 4 ends 54,598 km from where
+# it began. Fine for a static plot of a single orbit, fatal for an animation,
+# where the spacecraft visibly teleports at each handover. The stages' perigee
+# altitudes differ by at most 61 km, which is invisible at this scale, so
+# nothing about the "same burn point" story is lost.
+r0_dir = ROT @ np.array([1.0, 0.0, 0.0])
 
-raises, vp_last = [], None
+raises, vp_last, r0 = [], None, None
 for alt_p, alt_a in STAGES:
     rp, ra = RE + alt_p, RE + alt_a
     a = 0.5 * (rp + ra)
     vp = np.sqrt(MU_EARTH * (2.0 / rp - 1.0 / a))
+    r0 = r0_dir * rp
     v0 = ROT @ np.array([0.0, vp, 0.0])
     T = 2 * np.pi * np.sqrt(a**3 / MU_EARTH)
     sol = solve_ivp(twobody(MU_EARTH), [0, T], [*r0, *v0],
                     rtol=1e-10, atol=1e-6, dense_output=True)
-    # Uniform in TIME, not in solver steps: the viewer advances one index per
-    # frame, so the craft has to slow at apogee on its own.
-    pts = sol.sol(np.linspace(0, T, 260)).T[:, :3]
-    raises.append({'apogee_km': round(ra - RE), 'pts': r3(pts)})
+    pts, tn = resample_by_angle(sol, T, 300)
+    raises.append({'apogee_km': round(ra - RE), 'pts': r3(pts),
+                   'tn': [round(float(v), 5) for v in tn]})
     vp_last = vp
 print(f'phase 1: {len(raises)} orbits, final apogee {STAGES[-1][1]:,} km alt')
 
@@ -84,6 +124,7 @@ print(f'phase 1: {len(raises)} orbits, final apogee {STAGES[-1][1]:,} km alt')
 rp5 = RE + STAGES[4][0]
 v_esc = np.sqrt(2 * MU_EARTH / rp5)          # exactly escape speed, per the report
 dv_esc = v_esc - vp_last
+r0 = r0_dir * rp5                            # same perigee the last raise ended at
 v0 = ROT @ np.array([0.0, v_esc, 0.0])
 
 soi = lambda t, y: np.linalg.norm(y[:3]) - R_SOI
@@ -93,7 +134,7 @@ sol = solve_ivp(twobody(MU_EARTH), [0, 60 * 86400], [*r0, *v0],
 t_soi = sol.t_events[0][0]
 exit_r = sol.y_events[0][0][:3]
 exit_v = sol.y_events[0][0][3:]
-escape_pts = thin(sol.sol(np.linspace(0, t_soi, 1400)).T[:, :3], 320)
+escape_pts, escape_tn = resample_by_arc(sol, t_soi, 340)
 print(f'phase 2: SOI at {np.linalg.norm(exit_r):,.0f} km after {t_soi/86400:.1f} d, '
       f'escape burn {dv_esc*1000:.0f} m/s')
 
@@ -239,6 +280,7 @@ data = {
   # act 1, Earth-centred frame, km
   'raises': raises,
   'escape': r3(escape_pts),
+  'escapeTn': [round(float(v), 5) for v in escape_tn],
   # act 2, heliocentric inertial frame, km
   'transfer': r3(thin(transfer, 420)),
   'earthOrbit': r3(thin(earth_helio, 240)),
