@@ -1,0 +1,503 @@
+<title>Slingshot to L1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+
+<style>
+:root{
+  --void:#04060D; --panel:#080D1A; --panel-2:#0E1626; --line:#18243C; --line-2:#223252;
+  --ink:#E8EDF7; --ink-2:#93A2BE; --ink-3:#5C6B88;
+  --accent:#52D6E8; --amber:#FF9E4A; --violet:#9A8CE0;
+  --display:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --body:'Spectral',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+  --maxw:1240px; --pad:clamp(20px,4vw,56px); --col:min(680px,100%);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--void); color:var(--ink);
+  font-family:var(--body); font-size:17px; line-height:1.66;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden}
+p{margin:0 0 1.05em}
+a{color:inherit; text-decoration:none}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+
+#sky{position:fixed; inset:0; width:100vw; height:100vh; z-index:0; pointer-events:none}
+.vignette{position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 30%, transparent 45%, rgba(4,6,13,.8) 100%)}
+.wrap{position:relative; z-index:2}
+
+/* ------------------------------------------------------------------ nav */
+nav{position:fixed; top:0; left:0; right:0; z-index:40; display:flex; justify-content:space-between;
+  align-items:center; padding:18px var(--pad); background:linear-gradient(180deg,rgba(4,6,13,.92),transparent)}
+nav .brand{font-family:var(--display); font-weight:600; font-size:14px; letter-spacing:.02em}
+nav .brand i{font-style:normal; color:var(--accent)}
+.nav-links{display:flex; gap:24px}
+.nav-links a{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); transition:color .25s}
+.nav-links a:hover{color:var(--ink)}
+#progress{position:fixed; top:0; left:0; height:2px; width:0; z-index:50;
+  background:linear-gradient(90deg,rgba(82,214,232,.3),var(--accent)); box-shadow:0 0 8px rgba(82,214,232,.5)}
+
+/* ---------------------------------------------------------------- layout */
+.shell{max-width:var(--maxw); margin:0 auto; padding:0 var(--pad)}
+[data-rev]{opacity:0; transform:translateY(16px);
+  transition:opacity .75s cubic-bezier(.2,.7,.3,1), transform .75s cubic-bezier(.2,.7,.3,1)}
+[data-rev].in{opacity:1; transform:none}
+
+/* ------------------------------------------------------------------ hero */
+header.hero{padding:clamp(110px,17vh,190px) 0 clamp(40px,6vh,70px)}
+.back{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); display:inline-flex; gap:8px; margin-bottom:34px; transition:color .3s}
+.back:hover{color:var(--accent)}
+.eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--accent); display:block; margin-bottom:16px}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(38px,7vw,86px); line-height:.94;
+  letter-spacing:-.032em; margin:0 0 24px; text-wrap:balance; max-width:16ch}
+.dek{font-size:clamp(17px,1.9vw,21px); line-height:1.55; color:var(--ink-2); max-width:52ch; margin:0}
+
+.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-top:44px}
+.fact{background:var(--panel); padding:15px 17px}
+.fact dt{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:6px}
+.fact dd{margin:0; font-family:var(--mono); font-size:13px; line-height:1.55; color:var(--ink)}
+
+/* ------------------------------------------------------------------ body */
+.doc{display:grid; grid-template-columns:180px minmax(0,1fr); gap:clamp(30px,5vw,70px);
+  align-items:start; padding-bottom:60px}
+.toc{position:sticky; top:96px; display:flex; flex-direction:column; gap:1px}
+.toc a{display:flex; gap:11px; align-items:baseline; white-space:nowrap; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); padding:6px 0; transition:color .3s}
+.toc a span{opacity:.55}
+.toc a:hover{color:var(--ink-2)}
+.toc a.on{color:var(--ink)}
+.toc a.on span{color:var(--accent); opacity:1}
+
+section{margin-bottom:clamp(56px,8vh,96px); scroll-margin-top:90px}
+.sechead{display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--line);
+  padding-bottom:12px; margin-bottom:28px}
+.sechead .n{font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--accent)}
+h2{font-family:var(--display); font-weight:600; font-size:clamp(20px,2.6vw,28px); letter-spacing:-.012em;
+  margin:0; flex:1; text-wrap:balance}
+h3{font-family:var(--display); font-weight:600; font-size:17px; letter-spacing:-.005em; margin:34px 0 10px}
+section p, section ul{max-width:var(--col)}
+strong{font-weight:500; color:var(--ink)}
+em.term{font-style:normal; color:var(--accent)}
+ul{margin:0 0 1.05em; padding-left:20px}
+li{margin-bottom:.4em; color:var(--ink-2)}
+li::marker{color:var(--accent)}
+section p{color:var(--ink-2)}
+section p.lead{font-size:19px; color:var(--ink); max-width:58ch}
+
+/* ------------------------------------------------------------------ math */
+.eq{margin:22px 0; padding:16px 20px; border-left:2px solid var(--line-2);
+  background:rgba(8,13,26,.6); border-radius:0 3px 3px 0; overflow-x:auto; max-width:var(--col)}
+.eq .katex{font-size:1.02em; color:var(--ink)}
+.eq .cap{display:block; margin-top:10px; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.05em; color:var(--ink-3); line-height:1.7}
+
+/* ---------------------------------------------------------------- figures */
+figure{margin:30px 0; max-width:var(--col)}
+figure.wide{max-width:none}
+figure img{display:block; width:100%; height:auto}
+figcaption{margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; line-height:1.8; color:var(--ink-3)}
+figcaption b{color:var(--accent); font-weight:400; letter-spacing:.14em; text-transform:uppercase;
+  display:block; margin-bottom:5px}
+
+/* ----------------------------------------------------------------- tables */
+.tw{overflow-x:auto; border:1px solid var(--line); border-radius:4px; background:var(--panel);
+  margin:24px 0; max-width:var(--col)}
+table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px}
+th,td{text-align:left; padding:10px 16px; border-bottom:1px solid var(--line); white-space:nowrap}
+tr:last-child td{border-bottom:none}
+th{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:500; background:var(--panel-2)}
+td{color:var(--ink-2); font-variant-numeric:tabular-nums}
+td:first-child{color:var(--accent)}
+tr.burn td{color:var(--ink)}
+
+/* ------------------------------------------------------------------ notes */
+.note{border:1px solid var(--line); border-left:2px solid var(--amber); border-radius:0 4px 4px 0;
+  background:rgba(8,13,26,.7); padding:18px 20px; margin:26px 0; max-width:var(--col)}
+.note .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--amber); display:block; margin-bottom:9px}
+.note p{margin:0; font-size:16px}
+
+/* ------------------------------------------------------------- viewer slot */
+.viewer{margin:34px 0 0; border:1px solid var(--line); border-radius:4px; background:var(--panel-2);
+  aspect-ratio:16/9; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; text-align:center; padding:30px}
+.viewer .k{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent)}
+.viewer p{max-width:44ch; margin:0; font-size:15px; color:var(--ink-3)}
+
+/* ------------------------------------------------------------------ links */
+.arts{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; max-width:var(--col)}
+.art{border:1px solid var(--line); border-radius:4px; background:var(--panel); padding:17px 19px;
+  transition:border-color .3s, background .3s}
+.art:hover{border-color:var(--line-2); background:var(--panel-2)}
+.art .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--accent); display:block; margin-bottom:7px}
+.art .t{font-family:var(--display); font-weight:600; font-size:15px; display:block; margin-bottom:4px}
+.art .d{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+
+footer{border-top:1px solid var(--line); margin-top:40px; padding:22px var(--pad) 40px;
+  max-width:var(--maxw); margin-left:auto; margin-right:auto;
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3)}
+footer a:hover{color:var(--accent)}
+
+@media (max-width:900px){
+  .doc{grid-template-columns:minmax(0,1fr); gap:0}
+  .toc{position:static; flex-direction:row; flex-wrap:wrap; gap:0 16px;
+    padding-bottom:22px; margin-bottom:30px; border-bottom:1px solid var(--line)}
+  .nav-links{gap:14px}
+  .nav-links a{font-size:9.5px; letter-spacing:.1em}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  [data-rev]{opacity:1; transform:none; transition:none}
+}
+</style>
+<!--/head-->
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
+
+<nav>
+  <a class="brand" href="../../">Anshuman Vyas<i>.</i></a>
+  <div class="nav-links">
+    <a href="../../#work">Work</a>
+    <a href="../../#research">Research</a>
+    <a href="../../#track">Path</a>
+    <a href="../../#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero shell">
+    <a class="back" href="../../#work">&larr; Selected work</a>
+    <span class="eyebrow" data-rev>01 &middot; Trajectory</span>
+    <h1 data-rev>Slingshot to L1</h1>
+    <p class="dek" data-rev>Modelling the full transfer from a low Earth parking orbit to a halo orbit
+      about the Sun&ndash;Earth L1 point: four burns at perigee, a fifth that leaves Earth behind,
+      and a three-body problem at the far end.</p>
+
+    <dl class="facts" data-rev>
+      <div class="fact"><dt>Subject</dt><dd>Aditya-L1<br>ISRO solar observatory</dd></div>
+      <div class="fact"><dt>Parking orbit</dt><dd>235 &times; 19,500 km<br>i = 19.2&deg;</dd></div>
+      <div class="fact"><dt>After 4 raises</dt><dd>256 &times; 121,973 km</dd></div>
+      <div class="fact"><dt>Halo amplitude</dt><dd>A&#8340; = 120,000 km</dd></div>
+      <div class="fact"><dt>Tools</dt><dd>MATLAB<br>CR3BP &middot; Lambert</dd></div>
+    </dl>
+  </header>
+
+  <div class="shell doc">
+    <nav class="toc" aria-label="Sections">
+      <a href="#mission"><span>01</span> Mission</a>
+      <a href="#parking"><span>02</span> Parking</a>
+      <a href="#raises"><span>03</span> Burns</a>
+      <a href="#escape"><span>04</span> Escape</a>
+      <a href="#lagrange"><span>05</span> L1</a>
+      <a href="#halo"><span>06</span> Halo</a>
+      <a href="#transfer"><span>07</span> Transfer</a>
+      <a href="#insertion"><span>08</span> Insertion</a>
+      <a href="#artifacts"><span>09</span> Artifacts</a>
+    </nav>
+
+    <main>
+      <!-- ============================================================ 01 -->
+      <section id="mission">
+        <div class="sechead" data-rev><span class="n">01</span><h2>The mission</h2></div>
+        <p class="lead" data-rev>Aditya-L1 is India's first dedicated solar observatory. It carries seven
+          payloads: four looking directly at the Sun, three measuring particles and fields in situ.
+          It launched on 2 September 2023.</p>
+        <p data-rev>The reason it goes to L1 rather than to Earth orbit is uninterrupted view. A spacecraft
+          near the first Sun&ndash;Earth Lagrange point sees the Sun continuously, with no occultation by
+          the Earth, which makes it possible to watch coronal mass ejections and flare activity as they
+          develop rather than in fragments.</p>
+        <p data-rev>This project reproduces that trajectory from the ground up: establish the parking orbit,
+          raise it in stages, escape Earth's sphere of influence, find L1 numerically, pick a halo orbit
+          around it, and patch the two halves of the journey together.</p>
+      </section>
+
+      <!-- ============================================================ 02 -->
+      <section id="parking">
+        <div class="sechead" data-rev><span class="n">02</span><h2>The parking orbit</h2></div>
+        <p data-rev>The spacecraft is first placed in an elliptical orbit with a perigee radius of 235 km
+          and an apogee radius of 19,500 km, inclined 19.2&deg;, with an argument of perigee of 346.6&deg;.
+          Perigee velocity comes from the vis-viva equation:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">v_p = \sqrt{\mu\left(\frac{2}{r_p} - \frac{1}{a}\right)}</span>
+          <span class="cap">&mu; is Earth's gravitational parameter, r&#8346; the perigee radius,
+            a the semi-major axis.</span>
+        </div>
+
+        <p data-rev>Velocity at perigee is tangential, so in the perifocal frame the state is simply
+          <em class="term">r</em> = [r&#8346;, 0, 0] and <em class="term">v</em> = [0, v&#8346;, 0].
+          Orienting that into the correct plane is two rotations, one for inclination and one for the
+          argument of perigee:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">R_i = \begin{bmatrix} 1 & 0 & 0 \\ 0 & \cos i & -\sin i \\ 0 & \sin i & \cos i \end{bmatrix}
+          \qquad
+          R_\omega = \begin{bmatrix} \cos\omega & -\sin\omega & 0 \\ \sin\omega & \cos\omega & 0 \\ 0 & 0 & 1 \end{bmatrix}</span>
+          <span class="cap">Applied to both the position and velocity vectors to give the oriented
+            parking orbit.</span>
+        </div>
+      </section>
+
+      <!-- ============================================================ 03 -->
+      <section id="raises">
+        <div class="sechead" data-rev><span class="n">03</span><h2>Four burns at perigee</h2></div>
+        <p data-rev>Indian launch vehicles cannot give a spacecraft escape velocity directly, so the orbit
+          is built up instead. This is the slingshot technique, and it works because of the
+          <strong>Oberth effect</strong>: the most efficient place to change velocity is the point of an
+          orbit where you are already moving fastest, which for an ellipse is perigee.</p>
+
+        <p data-rev>So the same burn point is used four times over, each one raising apogee further:</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <thead><tr><th>Stage</th><th>Perigee</th><th>Apogee</th></tr></thead>
+            <tbody>
+              <tr><td>Initial</td><td>235 km</td><td>19,500 km</td></tr>
+              <tr class="burn"><td>Burn 1</td><td>245 km</td><td>22,459 km</td></tr>
+              <tr class="burn"><td>Burn 2</td><td>282 km</td><td>40,225 km</td></tr>
+              <tr class="burn"><td>Burn 3</td><td>296 km</td><td>71,767 km</td></tr>
+              <tr class="burn"><td>Burn 4</td><td>256 km</td><td>121,973 km</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="eq" data-rev>
+          <span class="tex">\Delta V = V_{p2} - V_{p}</span>
+          <span class="cap">V&#8346;&#8322; is the perigee velocity required to hold the larger orbit,
+            found from the same vis-viva expression with the new semi-major axis.</span>
+        </div>
+
+        <figure class="wide" data-rev>
+          <img src="../figures/parking-orbits.png" alt="Five nested elliptical orbits around Earth, each larger than the last">
+          <figcaption><b>Figure 1 &middot; Orbit raising</b>
+            The parking orbit and the four raised orbits, plotted together in the Earth-centred frame.
+            Each burn is applied at the same physical point, so all five ellipses share a perigee.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 04 -->
+      <section id="escape">
+        <div class="sechead" data-rev><span class="n">04</span><h2>Leaving Earth behind</h2></div>
+        <p data-rev>To escape a planet's gravity the spacecraft has to be on a hyperbolic trajectory
+          relative to it, arriving at the edge of the sphere of influence with hyperbolic excess velocity
+          greater than zero:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">v_\infty = \sqrt{\frac{\mu_{\odot}}{R_1}}\left(\sqrt{\frac{2R_2}{R_1 + R_2}} - 1\right)</span>
+          <span class="cap">R&#8321; is the Sun&ndash;Earth distance, R&#8322; the Sun&ndash;L1 distance,
+            &mu;<sub>&#9737;</sub> the Sun's gravitational parameter.</span>
+        </div>
+
+        <p data-rev>That fixes the velocity needed at the periapsis of the hyperbola, and the fifth and final
+          burn is the difference between it and the speed the spacecraft already has there:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">V_{ph} = \sqrt{v_\infty^{2} + \frac{2\mu}{r_p}} \qquad \Delta V = V_{ph} - V_{pf}</span>
+          <span class="cap">Applied at the perigee of the final raised orbit, as with the four before it.</span>
+        </div>
+
+        <figure data-rev>
+          <img src="../figures/soi-escape.png" alt="Trajectory leaving Earth on a hyperbolic path toward the edge of the sphere of influence">
+          <figcaption><b>Figure 2 &middot; Escape</b>
+            The hyperbolic departure from the final parking orbit out to the edge of Earth's sphere
+            of influence, where the two-body Earth problem stops applying.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 05 -->
+      <section id="lagrange">
+        <div class="sechead" data-rev><span class="n">05</span><h2>Finding L1</h2></div>
+        <p data-rev>Lagrange points are the positions where the gravitational pull of two large bodies
+          supplies exactly the centripetal force a small third body needs to move with them. There are
+          five. The three collinear ones lie on the line joining the two masses and all three are unstable.
+          L1 currently hosts SOHO; L2 hosts JWST.</p>
+
+        <p data-rev>Locating them means working in the <strong>circular restricted three-body
+          problem</strong>. In the rotating, non-dimensional frame the equations of motion are:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\begin{aligned}
+          \ddot{x}^{*} - 2\dot{y}^{*} - x^{*} &= -\frac{1-\pi_2}{\sigma^3}(x^{*}+\pi_2) - \frac{\pi_2}{\psi^3}(x^{*}-1+\pi_2) \\
+          \ddot{y}^{*} + 2\dot{x}^{*} - y^{*} &= -\frac{1-\pi_2}{\sigma^3}y^{*} - \frac{\pi_2}{\psi^3}y^{*} \\
+          \ddot{z}^{*} &= -\frac{1-\pi_2}{\sigma^3}z^{*} - \frac{\pi_2}{\psi^3}z^{*}
+          \end{aligned}</span>
+          <span class="cap">&pi;&#8322; = m&#8322; / (m&#8321; + m&#8322;). &sigma; and &psi; are the distances
+            to the two primaries.</span>
+        </div>
+
+        <p data-rev>The useful property of this form is what it does <em class="term">not</em> depend on. It is
+          independent of the two masses individually, of the rotation rate of the frame, and of the separation
+          between the primaries. It depends only on the mass ratio, which is why the same equations describe
+          Sun&ndash;Earth and Earth&ndash;Moon alike.</p>
+
+        <p data-rev>At an equilibrium point every velocity and acceleration term vanishes. Setting
+          <em class="term">y*</em> = 0 for the collinear case leaves a single equation in
+          <em class="term">x*</em>:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">x^{*} - \frac{1-\pi_2}{|x^{*}+\pi_2|^{3}}(x^{*}+\pi_2) - \frac{\pi_2}{|x^{*}-1+\pi_2|^{3}}(x^{*}-1+\pi_2) = 0</span>
+          <span class="cap">Quintic in x*. No closed-form solution, so it is solved numerically.</span>
+        </div>
+
+        <figure data-rev>
+          <img src="../figures/collinear-roots.png" alt="Plot of the collinear Lagrange point equation showing S-shaped curve with roots">
+          <figcaption><b>Figure 3 &middot; Collinear roots</b>
+            The collinear condition plotted. Solutions lie on the S-shaped curve; L1 is the root
+            between the two primaries.</figcaption>
+        </figure>
+
+        <p data-rev>With the Sun&ndash;Earth distance normalised to 1 AU, the solver puts L1 at
+          <strong>x* = 0.9900</strong>, one percent of the way back from Earth toward the Sun. At
+          1 AU &asymp; 150 million km, that is roughly <strong>1.5 million km</strong> from Earth.</p>
+      </section>
+
+      <!-- ============================================================ 06 -->
+      <section id="halo">
+        <div class="sechead" data-rev><span class="n">06</span><h2>Choosing a halo</h2></div>
+        <p data-rev>Linearising the equations of motion about L1 and solving for small departures shows it
+          to be a <strong>saddle point</strong>, dynamically unstable. Nothing placed there stays there.
+          That is why Aditya-L1 does not go to L1 so much as orbit it.</p>
+
+        <p data-rev>The halo orbit is selected by its out-of-plane amplitude A&#8340;, which can range from
+          zero up to about 920,000 km. Larger halos have a communications penalty, so an intermediate
+          <strong>A&#8340; = 120,000 km</strong> was chosen.</p>
+
+        <p data-rev>Richardson's method gives the starting approximation, a linearised periodic solution
+          about the libration point:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\begin{aligned}
+          x &= -A_x\cos(\lambda t + \phi) \\
+          y &= kA_x\cos(\lambda t + \phi) \\
+          z &= A_z\cos(\lambda t + \psi)
+          \end{aligned}</span>
+          <span class="cap">A&#8339; and A&#8340; are not independent: a nonlinear algebraic constraint from
+            the perturbation method links them, and the phases &phi; and &psi; are linearly related.</span>
+        </div>
+
+        <p data-rev>The orbit only closes when the amplitudes are large enough that the nonlinear
+          contributions drive the in-plane and out-of-plane eigenfrequencies to match. That constraint is
+          what makes a halo a halo rather than a Lissajous figure that never repeats.</p>
+
+        <figure data-rev>
+          <img src="../figures/halo-3d.png" alt="Three-dimensional plot of the halo orbit looping around the L1 point">
+          <figcaption><b>Figure 4 &middot; Halo orbit</b>
+            The halo orbit about L1, plotted in three dimensions. The marker at the centre is the
+            libration point itself, which the spacecraft never occupies.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 07 -->
+      <section id="transfer">
+        <div class="sechead" data-rev><span class="n">07</span><h2>Sphere of influence to L1</h2></div>
+        <p data-rev>The journey is stitched together with the <strong>patched conic method</strong>: two
+          separate two-body problems joined at the boundary of Earth's sphere of influence. Inside it, the
+          spacecraft is on a hyperbola about Earth. Outside it, the assumption is that it follows an
+          unperturbed Keplerian orbit about the Sun.</p>
+
+        <p data-rev>Crossing that boundary is a change of frame. The spacecraft has been carrying Earth's
+          orbital motion around the Sun the whole time it was in the parking orbit, so both position and
+          velocity get Earth's added to them:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\begin{aligned}
+          \mathbf{r}_{sat,\odot} &= \mathbf{r}_{sat,\oplus} + \mathbf{r}_{\oplus} \\
+          \mathbf{v}_{sat,\odot} &= \mathbf{v}_{sat,\oplus} + \mathbf{v}_{\oplus}
+          \end{aligned}</span>
+          <span class="cap">Earth-centred state to heliocentric state at the sphere-of-influence crossing.</span>
+        </div>
+
+        <p data-rev>With the spacecraft and L1 both expressed heliocentrically, the transfer arc between them
+          is a <strong>Lambert problem</strong>: given two position vectors and a time of flight, find the
+          orbit that connects them. A universal-variable Lambert solver returns the velocities required at
+          both ends, and the total cost of the transfer is the sum of two impulses.</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\Delta V_{total} = \Delta V_1 + \Delta V_2</span>
+          <span class="cap">&Delta;V&#8321; departs the sphere of influence onto the transfer arc.
+            &Delta;V&#8322; is what it costs to stay once there.</span>
+        </div>
+
+        <div class="note" data-rev>
+          <span class="k">Why &Delta;V&#8322; is not zero</span>
+          <p>Held exactly at L1, an idealised spacecraft needs nothing to stay: it is an equilibrium point,
+            so the required velocity is zero. Real spacecraft do not get that. Because L1 is unstable, the
+            halo orbit has to be actively maintained, and station-keeping works out to roughly
+            <strong>0.2 to 0.4 m/s</strong>. That number, not zero, is what sets &Delta;V&#8322;.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 08 -->
+      <section id="insertion">
+        <div class="sechead" data-rev><span class="n">08</span><h2>Halo insertion</h2></div>
+        <p class="lead" data-rev>Getting to L1 is a two-body problem. Staying in a closed orbit around it
+          is not, and Richardson's linearised solution is only ever a starting guess.</p>
+        <p data-rev>An orbit built from the linearised approximation does not close. Propagated in the full
+          circular restricted three-body dynamics it drifts, because the linear solution ignores exactly the
+          nonlinear terms that make the orbit periodic in the first place. Turning that guess into a genuinely
+          periodic orbit is a separate numerical problem: differential correction in the CR3BP, propagating to
+          each x&ndash;z plane crossing and Newton-stepping the initial state until the orbit returns to
+          where it started.</p>
+
+        <div class="viewer" data-rev>
+          <span class="k">Interactive &middot; in progress</span>
+          <p>The full mission viewer goes here: parking orbit and slingshot, the coast to L1, and the halo
+            orbit, in one continuous 3D scene you can scrub through.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 09 -->
+      <section id="artifacts">
+        <div class="sechead" data-rev><span class="n">09</span><h2>Artifacts</h2></div>
+        <div class="arts" data-rev>
+          <div class="art">
+            <span class="k">Report</span>
+            <span class="t">Full write-up</span>
+            <span class="d">Theory, derivations, results</span>
+          </div>
+          <div class="art">
+            <span class="k">Code</span>
+            <span class="t">MATLAB</span>
+            <span class="d">CR3BP library, Lambert solver, orbit models</span>
+          </div>
+          <div class="art">
+            <span class="k">Viewer</span>
+            <span class="t">Interactive mission</span>
+            <span class="d">Standalone 3D scene</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <span><a href="../../">Anshuman Vyas</a> &middot; Ottawa, Canada</span>
+    <span>&copy; 2026 Anshuman Vyas &middot; All rights reserved</span>
+  </footer>
+</div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script>
+  window.addEventListener('load', function () {
+    if (!window.katex) return;
+    document.querySelectorAll('.eq .tex').forEach(function (el) {
+      try {
+        katex.render(el.textContent, el, { displayMode: true, throwOnError: false });
+      } catch (e) { /* leave the source visible rather than blanking the equation */ }
+    });
+  });
+</script>
+<script>/*__BUNDLE__*/</script>

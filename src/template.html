@@ -109,13 +109,18 @@ h1 .l2{display:block; color:var(--accent)}
 .work-grid{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); gap:clamp(24px,4vw,56px); align-items:start}
 .rows{border-top:1px solid var(--line)}
 .row{display:grid; grid-template-columns:38px minmax(0,1fr); gap:16px; align-items:start;
-  padding:22px 6px 22px 0; border-bottom:1px solid var(--line); position:relative;
+  }
+a.row{grid-template-columns:38px minmax(0,1fr) 22px; cursor:pointer}
+.row{padding:22px 6px 22px 0; border-bottom:1px solid var(--line); position:relative;
   transition:background .35s ease, padding-left .35s ease}
 .row::after{content:''; position:absolute; left:0; top:-1px; height:1px; width:0; background:var(--accent); transition:width .5s cubic-bezier(.2,.7,.3,1)}
 .row.on::after{width:100%}
 .row.on{background:linear-gradient(90deg,rgba(82,214,232,.05),transparent 60%); padding-left:12px}
 .row .ix{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; color:var(--ink-3); padding-top:5px; transition:color .3s}
 .row.on .ix{color:var(--accent)}
+.row .go{font-family:var(--mono); font-size:14px; color:var(--ink-3); padding-top:3px;
+  transition:color .3s, transform .3s}
+.row.on .go{color:var(--accent); transform:translateX(3px)}
 .row h3{font-family:var(--display); font-weight:600; font-size:clamp(17px,2vw,21px); letter-spacing:-.01em; margin:0 0 6px; transition:color .3s}
 .row p{font-size:15.5px; line-height:1.55; color:var(--ink-3); margin:0 0 11px; max-width:52ch; transition:color .3s}
 .row.on p{color:var(--ink-2)}
@@ -414,14 +419,15 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding:22px var(--pad
     <div class="work-grid">
       <div class="rows" data-rev data-d="1">
 
-        <div class="row on" data-idx="01 / TRAJECTORY" data-short="Launch &amp; L1 transfer" data-stat="MATLAB + STK / stability analysis">
+        <a class="row on" href="work/l1-transfer/" data-idx="01 / TRAJECTORY" data-short="Launch &amp; L1 transfer" data-stat="MATLAB + STK / stability analysis">
           <span class="ix">01</span>
           <div>
             <h3>Satellite launch and Sun-Earth L1 transfer <span class="yr">2024</span></h3>
             <p>MATLAB and STK models of launch, orbital transfer and insertion at the Sun-Earth L1 point, with stability analysis and multi-frame coordinate transformations validating the trajectory across mission phases.</p>
             <div class="tags"><span>MATLAB</span><span>STK</span><span>Astrodynamics</span><span>Trajectory design</span></div>
           </div>
-        </div>
+          <span class="go">&#8599;</span>
+        </a>
 
         <div class="row" data-idx="02 / MANIPULATOR" data-short="6-DOF capture arm" data-stat="FK + IK / dynamics / motion control">
           <span class="ix">02</span>
