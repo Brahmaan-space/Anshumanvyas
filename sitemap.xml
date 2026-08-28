@@ -11,12 +11,22 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://anshumanvyas.dev/work/capture-manipulator/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://anshumanvyas.dev/work/lidar-reconstruction/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://anshumanvyas.dev/work/l1-transfer/viewer/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://anshumanvyas.dev/work/capture-manipulator/viewer/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

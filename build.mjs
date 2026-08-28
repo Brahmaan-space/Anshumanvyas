@@ -59,6 +59,31 @@ const PAGES = [
     canonical: '/work/lidar-reconstruction/'
   },
   {
+    src: 'src/work-manipulator.html',
+    entry: 'src/page.js',
+    out: 'work/capture-manipulator/index.html',
+    base: '../../',
+    title: 'Reaching ENVISAT | Anshuman Vyas',
+    description:
+      'A 6-DOF manipulator sized to grapple the derelict ENVISAT satellite: link and ' +
+      'joint layout, Denavit-Hartenberg parameters, forward and inverse kinematics, and ' +
+      'a capture path planned through joint space and checked against the joint limits.',
+    image: 'og.png',
+    canonical: '/work/capture-manipulator/'
+  },
+  {
+    src: 'src/viewer-arm.html',
+    entry: 'src/viewer-arm.js',
+    out: 'work/capture-manipulator/viewer/index.html',
+    base: '../../../',
+    title: 'Arm viewer | Reaching ENVISAT',
+    description:
+      'Interactive 6-DOF arm drawn from its Denavit-Hartenberg table, running the ' +
+      'reach, capture and carry path with live joint angles against the joint limits.',
+    image: 'og.png',
+    canonical: '/work/capture-manipulator/viewer/'
+  },
+  {
     src: 'src/viewer-l1.html',
     entry: 'src/viewer.js',
     out: 'work/l1-transfer/viewer/index.html',

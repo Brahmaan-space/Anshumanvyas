@@ -123,6 +123,10 @@ th{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--
 td{color:var(--ink-2); font-variant-numeric:tabular-nums}
 td:first-child{color:var(--accent)}
 tr.burn td{color:var(--ink)}
+/* A <caption> names the table for a screen reader. The heading above it already
+   does that job visually, so it is taken out of the flow rather than styled. */
+.sr-only{position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
 
 /* ------------------------------------------------------------------ notes */
 .note{border:1px solid var(--line); border-left:2px solid var(--amber); border-radius:0 4px 4px 0;
