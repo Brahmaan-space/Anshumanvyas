@@ -34,7 +34,7 @@
 <title>Reaching ENVISAT | Anshuman Vyas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 
 <style>/* Shared stylesheet for interior project pages.
@@ -47,15 +47,15 @@
   --void:#04060D; --panel:#080D1A; --panel-2:#0E1626; --line:#18243C; --line-2:#223252;
   --ink:#E8EDF7; --ink-2:#93A2BE; --ink-3:#5C6B88;
   --accent:#52D6E8; --amber:#FF9E4A; --violet:#9A8CE0;
-  --display:'Archivo','Helvetica Neue',Arial,sans-serif;
-  --body:'Spectral',Georgia,'Times New Roman',serif;
+  --display:'Inter','Helvetica Neue',Arial,sans-serif;
+  --body:'Inter','Helvetica Neue',Arial,sans-serif;
   --mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
   --maxw:1240px; --pad:clamp(20px,4vw,56px); --col:min(680px,100%);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0; background:var(--void); color:var(--ink);
-  font-family:var(--body); font-size:17px; line-height:1.66;
+  font-family:var(--body); font-size:16px; line-height:1.66;
   -webkit-font-smoothing:antialiased; overflow-x:hidden}
 p{margin:0 0 1.05em}
 a{color:inherit; text-decoration:none}
@@ -72,7 +72,7 @@ nav{position:fixed; top:0; left:0; right:0; z-index:40; display:flex; justify-co
 nav .brand{font-family:var(--display); font-weight:600; font-size:14px; letter-spacing:.02em}
 nav .brand i{font-style:normal; color:var(--accent)}
 .nav-links{display:flex; gap:24px}
-.nav-links a{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+.nav-links a{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-3); transition:color .25s}
 .nav-links a:hover{color:var(--ink)}
 #progress{position:fixed; top:0; left:0; height:2px; width:0; z-index:50;
@@ -89,10 +89,10 @@ nav .brand i{font-style:normal; color:var(--accent)}
    padding or the hero loses it. Invisible above 1240px, where .shell's auto
    margin happens to supply a gutter; flush to the window edge at or below it. */
 header.hero{padding:clamp(88px,12vh,140px) var(--pad) clamp(34px,5vh,56px)}
-.back{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+.back{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-3); display:inline-flex; gap:8px; margin-bottom:34px; transition:color .3s}
 .back:hover{color:var(--accent)}
-.eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase;
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--accent); display:block; margin-bottom:16px}
 h1{font-family:var(--display); font-weight:700; font-size:clamp(38px,7vw,86px); line-height:.94;
   letter-spacing:-.032em; margin:0 0 24px; text-wrap:balance; max-width:16ch}
@@ -101,7 +101,7 @@ h1{font-family:var(--display); font-weight:700; font-size:clamp(38px,7vw,86px); 
 .facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
   background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-top:44px}
 .fact{background:var(--panel); padding:15px 17px}
-.fact dt{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+.fact dt{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-3); margin-bottom:6px}
 .fact dd{margin:0; font-family:var(--mono); font-size:13px; line-height:1.55; color:var(--ink)}
 
@@ -112,7 +112,7 @@ h1{font-family:var(--display); font-weight:700; font-size:clamp(38px,7vw,86px); 
   /* .toc is a <nav>, so it would otherwise inherit align-items:center and
      justify-content:space-between from the fixed header rule above. */
   align-items:stretch; justify-content:flex-start}
-.toc a{display:flex; gap:11px; align-items:baseline; white-space:nowrap; font-family:var(--mono); font-size:10.5px;
+.toc a{display:flex; gap:11px; align-items:baseline; white-space:nowrap; font-family:var(--mono); font-size:11px;
   letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); padding:6px 0; transition:color .3s}
 .toc a span{opacity:.55}
 .toc a:hover{color:var(--ink-2)}
@@ -127,19 +127,19 @@ h2{font-family:var(--display); font-weight:600; font-size:clamp(20px,2.6vw,28px)
   margin:0; flex:1; text-wrap:balance}
 h3{font-family:var(--display); font-weight:600; font-size:17px; letter-spacing:-.005em; margin:34px 0 10px}
 section p, section ul{max-width:var(--col)}
-strong{font-weight:500; color:var(--ink)}
+strong{font-weight:600; color:var(--ink)}
 em.term{font-style:normal; color:var(--accent)}
 ul{margin:0 0 1.05em; padding-left:20px}
 li{margin-bottom:.4em; color:var(--ink-2)}
 li::marker{color:var(--accent)}
 section p{color:var(--ink-2)}
-section p.lead{font-size:19px; color:var(--ink); max-width:58ch}
+section p.lead{font-size:18px; color:var(--ink); max-width:58ch}
 
 /* ------------------------------------------------------------------ math */
 .eq{margin:22px 0; padding:16px 20px; border-left:2px solid var(--line-2);
   background:rgba(8,13,26,.6); border-radius:0 3px 3px 0; overflow-x:auto; max-width:var(--col)}
 .eq .katex{font-size:1.02em; color:var(--ink)}
-.eq .cap{display:block; margin-top:10px; font-family:var(--mono); font-size:10.5px;
+.eq .cap{display:block; margin-top:10px; font-family:var(--mono); font-size:11px;
   letter-spacing:.05em; color:var(--ink-3); line-height:1.7}
 
 /* ---------------------------------------------------------------- figures */
@@ -147,7 +147,7 @@ figure{margin:30px 0; max-width:var(--col)}
 figure.wide{max-width:none}
 figure img{display:block; width:100%; height:auto}
 figcaption{margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; line-height:1.8; color:var(--ink-3)}
+  font-family:var(--mono); font-size:11px; letter-spacing:.05em; line-height:1.8; color:var(--ink-3)}
 figcaption b{color:var(--accent); font-weight:400; letter-spacing:.14em; text-transform:uppercase;
   display:block; margin-bottom:5px}
 
@@ -157,7 +157,7 @@ figcaption b{color:var(--accent); font-weight:400; letter-spacing:.14em; text-tr
 table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px}
 th,td{text-align:left; padding:10px 16px; border-bottom:1px solid var(--line); white-space:nowrap}
 tr:last-child td{border-bottom:none}
-th{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+th{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
   font-weight:500; background:var(--panel-2)}
 td{color:var(--ink-2); font-variant-numeric:tabular-nums}
 td:first-child{color:var(--accent)}
@@ -170,7 +170,7 @@ tr.burn td{color:var(--ink)}
 /* ------------------------------------------------------------------ notes */
 .note{border:1px solid var(--line); border-left:2px solid var(--amber); border-radius:0 4px 4px 0;
   background:rgba(8,13,26,.7); padding:18px 20px; margin:26px 0; max-width:var(--col)}
-.note .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase;
+.note .k{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--amber); display:block; margin-bottom:9px}
 .note p{margin:0; font-size:16px}
 
@@ -194,7 +194,7 @@ tr.burn td{color:var(--ink)}
 /* --------------------------------------------------------- end-of-page nav */
 .pageend{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;
   max-width:var(--col); border-top:1px solid var(--line); padding-top:22px;
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-3)}
 .pageend a{transition:color .3s}
 .pageend a:hover{color:var(--accent)}
@@ -204,7 +204,7 @@ tr.burn td{color:var(--ink)}
 .art{border:1px solid var(--line); border-radius:4px; background:var(--panel); padding:17px 19px;
   transition:border-color .3s, background .3s}
 .art:hover{border-color:var(--line-2); background:var(--panel-2)}
-.art .k{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+.art .k{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--accent); display:block; margin-bottom:7px}
 .art .t{font-family:var(--display); font-weight:600; font-size:15px; display:block; margin-bottom:4px}
 .art .d{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
@@ -212,7 +212,7 @@ tr.burn td{color:var(--ink)}
 footer{border-top:1px solid var(--line); margin-top:40px; padding:22px var(--pad) 40px;
   max-width:var(--maxw); margin-left:auto; margin-right:auto;
   display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3)}
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3)}
 footer a:hover{color:var(--accent)}
 
 @media (max-width:900px){
@@ -220,7 +220,7 @@ footer a:hover{color:var(--accent)}
   .toc{position:static; flex-direction:row; flex-wrap:wrap; gap:0 16px;
     padding-bottom:22px; margin-bottom:30px; border-bottom:1px solid var(--line)}
   .nav-links{gap:14px}
-  .nav-links a{font-size:9.5px; letter-spacing:.1em}
+  .nav-links a{font-size:10px; letter-spacing:.1em}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
@@ -260,9 +260,9 @@ footer a:hover{color:var(--accent)}
     <span class="eyebrow" data-rev>02 &middot; Manipulator</span>
     <h1 data-rev>Reaching ENVISAT</h1>
     <p class="dek" data-rev>ENVISAT has been dead in a busy orbit since 2012 and it weighs eight tonnes.
-      Anything sent up to remove it needs a manipulator on it. This is a six-joint arm worked out far
-      enough to answer the question that matters for planning: if you pick a point on the satellite
-      you want to grab, what does each joint have to read to put the gripper there.</p>
+      Any mission sent up to remove it needs a manipulator. This page designs a six-joint arm for
+      that job and answers the planning question behind it: given a grapple point on the satellite
+      and an approach direction, what angle does each joint need.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Target</dt><dd>ENVISAT<br>8,211 kg, 26 m</dd></div>
@@ -314,9 +314,9 @@ footer a:hover{color:var(--accent)}
           that a lot of other satellites are using.</p>
 
         <p data-rev>Any mission that goes up to remove it needs a manipulator, and I wanted to work out
-          what that manipulator actually has to do. Specifically: if you choose a point on the satellite
-          to grab and a direction to come in from, what angle does each of the six joints need to be at.
-          The rest of the page is that question worked through.</p>
+          what that manipulator has to do: choose a point on the satellite to grab and a direction to
+          come in from, then find the angle each of the six joints needs to be at. The rest of the
+          page works through that question.</p>
 
         <div class="note" data-rev>
           <span class="k">On scale</span>
@@ -467,7 +467,7 @@ footer a:hover{color:var(--accent)}
           then a planar two-link problem in the vertical plane joint 1 has just swept out, with the
           shoulder at one end and the wrist centre at the other.</p>
 
-        <p data-rev>The part that is easy to get wrong is that the forearm is not a straight link. There is
+        <p data-rev>The forearm is not a straight link, and this is easy to get wrong. There is
           a 41.5 mm offset at the elbow and then 180 mm out to the wrist centre, so the effective link is
           184.7 mm long and it sits 12.98&deg; off the line you would draw between the two joints. If you
           ignore that, every solution comes back a couple of centimetres short, and the error looks like a
@@ -502,10 +502,11 @@ footer a:hover{color:var(--accent)}
 
         <p data-rev>So the solver works out all eight and ranks them. Joint limits come first, since a
           solution that breaks a stop is not a solution. After that it ranks on how far each one sits from
-          the previous waypoint, and that second test matters more than it sounds. Two waypoints only a
+          the previous waypoint. Two waypoints only a
           few centimetres apart can easily be solved on different branches, and if you then interpolate
-          between them the arm swings through most of its workspace and comes back. The joint angles are
-          valid at both ends. The elbow still goes through the payload on the way.</p>
+          between them the arm swings through most of its workspace and comes back. The joint angles
+          are valid at both ends; the path between them is not, because the elbow sweeps through the
+          payload on the way.</p>
 
         <p data-rev>There is a related problem at the wrist. When joint 5 passes through zero the axes of
           joints 4 and 6 line up, only their sum is determined by the target, and the solver is free to
@@ -599,11 +600,11 @@ footer a:hover{color:var(--accent)}
 
       <!-- ============================================================ 06 -->
       <section id="limits">
-        <div class="sechead" data-rev><span class="n">06</span><h2>What this does not do</h2></div>
+        <div class="sechead" data-rev><span class="n">06</span><h2>Limitations</h2></div>
         <p class="lead" data-rev>All of the above is kinematics. There is no mass anywhere in it.</p>
 
-        <p data-rev>That is the honest limit of the work. The arm knows what angles its joints need to be
-          at and nothing about what it costs to get them there. No inertias, no joint torques, no reaction
+        <p data-rev>The model stops there. The arm knows what angles its joints need to be at and nothing
+          about what it costs to get to them. No inertias, no joint torques, no reaction
           back into the station, no contact model at the gripper. For a half-metre arm on a bench that is
           a reasonable thing to leave out. For eight tonnes of tumbling satellite it is the part that
           decides whether the capture works at all, because as soon as the gripper closes the arm and the
@@ -615,8 +616,8 @@ footer a:hover{color:var(--accent)}
           waypoint, which no real actuator will do. Putting a trapezoidal or S-curve velocity profile over
           the same joint path would fix that without changing anything above it. And nothing here checks
           the arm against itself or against the payload. The branch continuity rule in section 04 avoids
-          the obvious collisions by keeping consecutive waypoints in the same family of solutions, but
-          that is working around the problem rather than solving it.</p>
+          the obvious collisions by keeping consecutive waypoints in the same family of solutions,
+          which reduces the risk without checking it.</p>
 
         <p data-rev>The original MATLAB and the CoppeliaSim scene are both lost. The parameters in section
           03 came back out of the manufacturer&rsquo;s published geometry, and I rewrote the kinematics

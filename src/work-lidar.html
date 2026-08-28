@@ -1,7 +1,7 @@
 <title>A room from 398 points</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 
 <style>/*__PAGECSS__*/</style>
@@ -28,7 +28,7 @@
     <h1 data-rev>A room from 398 points</h1>
     <p class="dek" data-rev>A laser rangefinder measures one distance along one line. Aimed 398 times from a fixed point it
       produces a cloud of coordinates, with nothing in it to say which of them belong to the same
-      wall. This is the algorithm that works that out and rebuilds the room.</p>
+      wall. This page covers the algorithm that sorts the returns into surfaces and rebuilds the room.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Instrument</dt><dd>Bosch GLM165-40<br>laser rangefinder</dd></div>
@@ -140,7 +140,7 @@
           <span class="k">Why the far end is sparse</span>
           <p>The scan steps by a fixed angle, so the spacing between points on a surface grows with
             distance from the instrument. The near wall is densely covered and the far end of the room is
-            not. That is the reason for most of what the next section has to deal with.</p>
+            not. Most of the work in section 04 exists to deal with this.</p>
         </div>
       </section>
 
@@ -339,11 +339,10 @@
             becomes one synthetic measurement.</figcaption>
         </figure>
 
-        <p data-rev>Feeding that through the pipeline produced the most useful result of the project. RANSAC alone
-          segmented the synthetic room completely, and the binning and majority voting stages were
-          never invoked, because with perfectly regular scan spacing there is nothing left over
-          for them to do. Those two stages exist because of how the real scan was collected rather
-          than because the geometry demands them.</p>
+        <p data-rev>Feeding that through the pipeline answered a question about the pipeline itself. RANSAC
+          alone segmented the synthetic room completely, and the binning and majority voting stages
+          were never invoked, because with regular scan spacing there is nothing left over for them
+          to do. Those two stages compensate for how the real scan was collected.</p>
 
         <figure data-rev>
           <img src="../figures/lidar-virtual-mesh.png" alt="The meshed reconstruction of the virtual room, walls and floor visible">
@@ -351,7 +350,7 @@
             The virtual room after segmentation, flattening and meshing.</figcaption>
         </figure>
 
-        <p data-rev>It also exposed something the real data had been hiding. The reconstructed synthetic walls lean
+        <p data-rev>The simulation also exposed an error the real data had hidden. The reconstructed synthetic walls lean
           inward by up to 2&deg;, which is 5 cm of error at the floor and ceiling and as much as
           30 cm at mid-wall. Rerunning the simulation with the error injection switched off
           removes the lean entirely, which points at the injected error rather than at the
@@ -389,7 +388,7 @@
         <p data-rev>Six surfaces were recovered from the room: floor, ceiling, back wall, side wall, and
           both faces of the cabinet run. The chairs and the backpack were not. A chair leg subtends almost nothing at six metres, and the scan&rsquo;s angular step never lands
           enough returns on one to make up a surface. Picking out objects at that scale needs a
-          denser scan or a different instrument rather than a different algorithm.</p>
+          denser scan or a different instrument; the algorithm is not the limiting part.</p>
       </section>
 
       <div class="pageend" data-rev>

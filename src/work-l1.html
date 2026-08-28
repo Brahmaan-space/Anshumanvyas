@@ -1,7 +1,7 @@
 <title>Slingshot to L1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 
 <style>/*__PAGECSS__*/</style>
@@ -73,7 +73,7 @@
           near the first Sun-Earth Lagrange point sees the Sun continuously, with no occultation
           by the Earth, so coronal mass ejections and flare activity can be observed as they
           develop.</p>
-        <p data-rev>This project reproduces that trajectory from the ground up: establish the parking orbit,
+        <p data-rev>This project reproduces the full trajectory: establish the parking orbit,
           raise it in stages, escape Earth's sphere of influence, find L1 numerically, pick a halo orbit
           around it, and patch the two halves of the journey together.</p>
       </section>
@@ -247,9 +247,9 @@
           bring the in-plane and out-of-plane eigenfrequencies into agreement. Below that they stay
           mismatched and the motion is a Lissajous figure, which never quite repeats.</p>
 
-        <p data-rev>Richardson&rsquo;s solution is linearised, so what it produces is close to a halo
-          orbit without being one. That is enough to choose an amplitude and see the shape, and it is
-          where the report stopped. Turning it into an orbit that actually repeats is section 08.</p>
+        <p data-rev>Richardson&rsquo;s solution is linearised, so it is an approximation of a halo orbit
+          rather than a periodic orbit. It is good enough to choose an amplitude and see the shape.
+          Section 08 turns it into an orbit that closes.</p>
 
         <figure data-rev>
           <img src="../figures/halo-3d.png" alt="Three-dimensional plot of the halo orbit looping around the L1 point">
@@ -309,7 +309,7 @@
 
         <p data-rev>Propagated in the full nonlinear CR3BP it does not close, because the terms the linearisation
           drops are the ones that make the orbit periodic. Closing it is a separate numerical
-          problem, and the rest of this section is how it was solved.</p>
+          problem, solved below.</p>
 
         <h3 data-rev>Linearising about L1</h3>
         <p data-rev>The first step is linearising about L1, done numerically rather than by transcribing a
@@ -430,8 +430,8 @@
           factor of four, because an orbit this unstable amplifies whatever it is given, including
           rounding.</p>
 
-        <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for. Without it, the orbit follows that drift
-          all the way out.</p>
+        <p data-rev>The 0.2 to 0.4 m/s station-keeping budget from section 07 exists to cancel this
+          drift.</p>
 
         <p class="seealso" data-rev>
           <a href="viewer/#halo">Replay the insertion on its own &#8599;</a>

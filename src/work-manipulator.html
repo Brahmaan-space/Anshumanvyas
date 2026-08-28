@@ -1,7 +1,7 @@
 <title>Reaching ENVISAT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 
 <style>/*__PAGECSS__*/</style>
@@ -27,9 +27,9 @@
     <span class="eyebrow" data-rev>02 &middot; Manipulator</span>
     <h1 data-rev>Reaching ENVISAT</h1>
     <p class="dek" data-rev>ENVISAT has been dead in a busy orbit since 2012 and it weighs eight tonnes.
-      Anything sent up to remove it needs a manipulator on it. This is a six-joint arm worked out far
-      enough to answer the question that matters for planning: if you pick a point on the satellite
-      you want to grab, what does each joint have to read to put the gripper there.</p>
+      Any mission sent up to remove it needs a manipulator. This page designs a six-joint arm for
+      that job and answers the planning question behind it: given a grapple point on the satellite
+      and an approach direction, what angle does each joint need.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Target</dt><dd>ENVISAT<br>8,211 kg, 26 m</dd></div>
@@ -81,9 +81,9 @@
           that a lot of other satellites are using.</p>
 
         <p data-rev>Any mission that goes up to remove it needs a manipulator, and I wanted to work out
-          what that manipulator actually has to do. Specifically: if you choose a point on the satellite
-          to grab and a direction to come in from, what angle does each of the six joints need to be at.
-          The rest of the page is that question worked through.</p>
+          what that manipulator has to do: choose a point on the satellite to grab and a direction to
+          come in from, then find the angle each of the six joints needs to be at. The rest of the
+          page works through that question.</p>
 
         <div class="note" data-rev>
           <span class="k">On scale</span>
@@ -234,7 +234,7 @@
           then a planar two-link problem in the vertical plane joint 1 has just swept out, with the
           shoulder at one end and the wrist centre at the other.</p>
 
-        <p data-rev>The part that is easy to get wrong is that the forearm is not a straight link. There is
+        <p data-rev>The forearm is not a straight link, and this is easy to get wrong. There is
           a 41.5 mm offset at the elbow and then 180 mm out to the wrist centre, so the effective link is
           184.7 mm long and it sits 12.98&deg; off the line you would draw between the two joints. If you
           ignore that, every solution comes back a couple of centimetres short, and the error looks like a
@@ -269,10 +269,11 @@
 
         <p data-rev>So the solver works out all eight and ranks them. Joint limits come first, since a
           solution that breaks a stop is not a solution. After that it ranks on how far each one sits from
-          the previous waypoint, and that second test matters more than it sounds. Two waypoints only a
+          the previous waypoint. Two waypoints only a
           few centimetres apart can easily be solved on different branches, and if you then interpolate
-          between them the arm swings through most of its workspace and comes back. The joint angles are
-          valid at both ends. The elbow still goes through the payload on the way.</p>
+          between them the arm swings through most of its workspace and comes back. The joint angles
+          are valid at both ends; the path between them is not, because the elbow sweeps through the
+          payload on the way.</p>
 
         <p data-rev>There is a related problem at the wrist. When joint 5 passes through zero the axes of
           joints 4 and 6 line up, only their sum is determined by the target, and the solver is free to
@@ -366,11 +367,11 @@
 
       <!-- ============================================================ 06 -->
       <section id="limits">
-        <div class="sechead" data-rev><span class="n">06</span><h2>What this does not do</h2></div>
+        <div class="sechead" data-rev><span class="n">06</span><h2>Limitations</h2></div>
         <p class="lead" data-rev>All of the above is kinematics. There is no mass anywhere in it.</p>
 
-        <p data-rev>That is the honest limit of the work. The arm knows what angles its joints need to be
-          at and nothing about what it costs to get them there. No inertias, no joint torques, no reaction
+        <p data-rev>The model stops there. The arm knows what angles its joints need to be at and nothing
+          about what it costs to get to them. No inertias, no joint torques, no reaction
           back into the station, no contact model at the gripper. For a half-metre arm on a bench that is
           a reasonable thing to leave out. For eight tonnes of tumbling satellite it is the part that
           decides whether the capture works at all, because as soon as the gripper closes the arm and the
@@ -382,8 +383,8 @@
           waypoint, which no real actuator will do. Putting a trapezoidal or S-curve velocity profile over
           the same joint path would fix that without changing anything above it. And nothing here checks
           the arm against itself or against the payload. The branch continuity rule in section 04 avoids
-          the obvious collisions by keeping consecutive waypoints in the same family of solutions, but
-          that is working around the problem rather than solving it.</p>
+          the obvious collisions by keeping consecutive waypoints in the same family of solutions,
+          which reduces the risk without checking it.</p>
 
         <p data-rev>The original MATLAB and the CoppeliaSim scene are both lost. The parameters in section
           03 came back out of the manufacturer&rsquo;s published geometry, and I rewrote the kinematics
