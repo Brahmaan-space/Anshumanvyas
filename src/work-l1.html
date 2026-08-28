@@ -247,11 +247,17 @@
           bring the in-plane and out-of-plane eigenfrequencies into agreement. Below that they stay
           mismatched and the motion is a Lissajous figure, which never quite repeats.</p>
 
+        <p data-rev>Richardson&rsquo;s solution is linearised, so what it produces is close to a halo
+          orbit without being one. That is enough to choose an amplitude and see the shape, and it is
+          where the report stopped. Turning it into an orbit that actually repeats is section 08.</p>
+
         <figure data-rev>
           <img src="../figures/halo-3d.png" alt="Three-dimensional plot of the halo orbit looping around the L1 point">
-          <figcaption><b>Figure 4 &middot; Halo orbit</b>
-            The halo orbit about L1, plotted in three dimensions. The marker at the centre is the
-            libration point itself, which the spacecraft never occupies.</figcaption>
+          <figcaption><b>Figure 4 &middot; Richardson&rsquo;s approximation</b>
+            The halo orbit as the linearised solution gives it, at A<sub>z</sub> = 120,000 km. The
+            marker at the centre is the libration point itself, which the spacecraft never occupies.
+            This is a starting guess rather than a periodic orbit. Propagated in the full nonlinear
+            problem it does not close, which is what section 08 fixes.</figcaption>
         </figure>
       </section>
 
@@ -401,8 +407,9 @@
 
         <figure data-rev>
           <img src="../figures/halo-converged.png" alt="Three-dimensional plot of the converged halo orbit, a long inclined loop around the L1 point">
-          <figcaption><b>Figure 5 &middot; The converged orbit</b>
-            One full period of the corrected solution, plotted about L1 (amber). The loop stands
+          <figcaption><b>Figure 5 &middot; The corrected orbit</b>
+            The same orbit after differential correction, propagated one full period. Unlike
+            Figure 4 this one closes, to within 228 m. It starts 171,200 km sunward of L1, stands
             120,000 km out of the ecliptic and runs 665,000 km to either side of the Sun-Earth
             line. Axes in km, relative to L1.</figcaption>
         </figure>
