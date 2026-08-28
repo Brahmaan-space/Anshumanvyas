@@ -338,10 +338,9 @@ footer a:hover{color:var(--accent)}
             to the two primaries.</span>
         </div>
 
-        <p data-rev>The useful property of this form is what it does <em class="term">not</em> depend on. It is
-          independent of the two masses individually, of the rotation rate of the frame, and of the separation
-          between the primaries. It depends only on the mass ratio, which is why the same equations describe
-          Sun&ndash;Earth and Earth&ndash;Moon alike.</p>
+        <p data-rev>In this form the equations depend only on the mass ratio <em class="term">&mu;</em> &mdash;
+          not on the two masses individually, the rotation rate of the frame, or the separation between the
+          primaries. The same equations therefore describe Sun&ndash;Earth and Earth&ndash;Moon alike.</p>
 
         <p data-rev>At an equilibrium point every velocity and acceleration term vanishes. Setting
           <em class="term">y*</em> = 0 for the collinear case leaves a single equation in
@@ -368,8 +367,8 @@ footer a:hover{color:var(--accent)}
       <section id="halo">
         <div class="sechead" data-rev><span class="n">06</span><h2>Choosing a halo</h2></div>
         <p data-rev>Linearising the equations of motion about L1 and solving for small departures shows it
-          to be a <strong>saddle point</strong>, dynamically unstable. Nothing placed there stays there.
-          That is why Aditya-L1 does not go to L1 so much as orbit it.</p>
+          to be a <strong>saddle point</strong>, dynamically unstable, so a spacecraft left sitting there
+          drifts off. Aditya-L1 orbits L1 rather than parking at it.</p>
 
         <p data-rev>The halo orbit is selected by its out-of-plane amplitude A<sub>z</sub>, which can range from
           zero up to about 920,000 km. Larger halos have a communications penalty, so an intermediate
@@ -388,9 +387,9 @@ footer a:hover{color:var(--accent)}
             the perturbation method links them, and the phases &phi; and &psi; are linearly related.</span>
         </div>
 
-        <p data-rev>The orbit only closes when the amplitudes are large enough that the nonlinear
-          contributions drive the in-plane and out-of-plane eigenfrequencies to match. That constraint is
-          what makes a halo a halo rather than a Lissajous figure that never repeats.</p>
+        <p data-rev>The orbit only closes when the amplitudes are large enough for the nonlinear terms to
+          bring the in-plane and out-of-plane eigenfrequencies into agreement. Below that they stay
+          mismatched and the motion is a Lissajous figure, which never quite repeats.</p>
 
         <figure data-rev>
           <img src="../figures/halo-3d.png" alt="Three-dimensional plot of the halo orbit looping around the L1 point">
@@ -433,53 +432,52 @@ footer a:hover{color:var(--accent)}
 
         <div class="note" data-rev>
           <span class="k">Why &Delta;V&#8322; is not zero</span>
-          <p>Held exactly at L1, an idealised spacecraft needs nothing to stay: it is an equilibrium point,
-            so the required velocity is zero. Real spacecraft do not get that. Because L1 is unstable, the
-            halo orbit has to be actively maintained, and station-keeping works out to roughly
-            <strong>0.2 to 0.4 m/s</strong>. That number, not zero, is what sets &Delta;V&#8322;.</p>
+          <p>At L1 exactly, an idealised spacecraft needs nothing to stay put &mdash; it is an equilibrium
+            point, so the required velocity is zero. In practice L1 is unstable and the halo has to be
+            actively maintained, which works out to roughly <strong>0.2 to 0.4 m/s</strong> of
+            station-keeping. That is what sets &Delta;V&#8322;.</p>
         </div>
       </section>
 
       <!-- ============================================================ 08 -->
       <section id="insertion">
         <div class="sechead" data-rev><span class="n">08</span><h2>Halo insertion</h2></div>
-        <p class="lead" data-rev>Getting to L1 is a two-body problem. Staying in a closed orbit around it
-          is not, and Richardson's linearised solution is only ever a starting guess.</p>
+        <p class="lead" data-rev>Section 06 picks the halo from Richardson's linearised solution, which
+          approximates a periodic orbit without being one.</p>
 
-        <p data-rev>Propagate that guess in the full nonlinear CR3BP and it does not close. It drifts,
-          because the linear solution discards precisely the nonlinear terms that make the orbit periodic.
-          Turning a guess into a genuinely periodic orbit is a separate numerical problem, and this is
-          how it was solved.</p>
+        <p data-rev>Propagated in the full nonlinear CR3BP it does not close &mdash; the terms the
+          linearisation drops are the ones that make the orbit periodic. Closing it is a separate
+          numerical problem, and this is how it was solved.</p>
 
         <h3 data-rev>Seeding the family</h3>
-        <p data-rev>First, linearise about L1 &mdash; but numerically rather than by transcribing a
-          closed-form Jacobian by hand. Central differences on the equations of motion give the 6&times;6
-          Jacobian at the equilibrium state:</p>
+        <p data-rev>The first step is linearising about L1, done numerically rather than by transcribing a
+          closed-form Jacobian. Central differences on the equations of motion give the 6&times;6 Jacobian
+          at the equilibrium state:</p>
 
         <div class="eq" data-rev>
           <span class="tex">J_{ij} = \frac{f_i(\mathbf{s}_{L1} + h\mathbf{e}_j) - f_i(\mathbf{s}_{L1} - h\mathbf{e}_j)}{2h}, \qquad h = 10^{-7}</span>
-          <span class="cap">f is the CR3BP vector field, s&#8556;&#8321; the equilibrium state
-            [x&#8556;&#8321;, 0, 0, 0, 0, 0].</span>
+          <span class="cap">f is the CR3BP vector field, s<sub>L1</sub> the equilibrium state
+            [x<sub>L1</sub>, 0, 0, 0, 0, 0].</span>
         </div>
 
-        <p data-rev>Taking the planar submatrix in (x, y, v&#8339;, v&#8342;) and eigendecomposing it gives
-          a purely imaginary pair alongside the real unstable pair. That imaginary pair is the in-plane
-          oscillatory mode at &lambda;&#8339;&#8342; = 2.0864, and its eigenvector points along the halo
-          family rather than across it. It sets the direction of the seed.</p>
+        <p data-rev>Eigendecomposing the planar submatrix in (x, y, v<sub>x</sub>, v<sub>y</sub>) gives a real unstable
+          pair and a purely imaginary pair. The imaginary pair is the in-plane oscillatory mode,
+          &lambda;<sub>xy</sub> = 2.0864, and its eigenvector gives the direction the seed should
+          point.</p>
 
         <div class="note" data-rev>
-          <span class="k">The seed has to be the size of the orbit</span>
-          <p>Direction is not enough. The corrector below builds its Jacobian by perturbing x&#8320; by
-            10&#8315;&#8310; &mdash; about 150 km. Seed the eigenvector at an amplitude of the same order
-            and the Jacobian is differencing the perturbation against itself rather than measuring a
-            derivative, and Newton walks off within three iterations. The seed is therefore placed at the
-            amplitude actually being sought, roughly 10&#8309; km out, where the perturbation is a tenth of
-            a percent of the state it is perturbing.</p>
+          <span class="k">Seed amplitude, not just direction</span>
+          <p>The corrector below builds its Jacobian by perturbing x&#8320; by 10&#8315;&#8310;, about
+            150 km. Scale the eigenvector down to a seed of similar size and the perturbation is as large
+            as the orbit, so the finite difference measures nothing useful and Newton diverges within three
+            iterations. Seeding at around 10&#8309; km instead &mdash; the amplitude the orbit will
+            actually have &mdash; keeps the perturbation at a tenth of a percent of the state, and the
+            corrector converges in six.</p>
         </div>
 
         <h3 data-rev>The corrector</h3>
-        <p data-rev>Halo orbits are symmetric about the x&ndash;z plane, and that symmetry is what makes
-          a two-variable shooting method sufficient. Start on the plane, moving perpendicular to it:</p>
+        <p data-rev>Halo orbits are symmetric about the x&ndash;z plane, which is what allows a two-variable
+          shooting method. The trajectory starts on the plane, moving perpendicular to it:</p>
 
         <div class="eq" data-rev>
           <span class="tex">\mathbf{s}_0 = [\,x_0,\; 0,\; z_0,\; 0,\; \dot{y}_0,\; 0\,]^{\mathsf{T}}</span>
@@ -489,13 +487,13 @@ footer a:hover{color:var(--accent)}
 
         <p data-rev>If the orbit is periodic, then propagating half a revolution to the next
           <em class="term">y = 0</em> crossing must arrive perpendicular to the plane again, which means
-          both remaining velocity components vanish there. That gives two residuals for two unknowns, and
-          a 2&times;2 Newton step closes the gap:</p>
+          both remaining velocity components vanish there. That is two residuals for two unknowns, solved by
+          a 2&times;2 Newton step:</p>
 
         <div class="eq" data-rev>
           <span class="tex">\begin{bmatrix} \Delta x_0 \\ \Delta \dot{y}_0 \end{bmatrix} = -J_c^{-1}\begin{bmatrix} \dot{x}_h \\ \dot{z}_h \end{bmatrix}, \qquad
           J_c = \begin{bmatrix} \dfrac{\partial \dot{x}_h}{\partial x_0} & \dfrac{\partial \dot{x}_h}{\partial \dot{y}_0} \\[6pt] \dfrac{\partial \dot{z}_h}{\partial x_0} & \dfrac{\partial \dot{z}_h}{\partial \dot{y}_0} \end{bmatrix}</span>
-          <span class="cap">Subscript h denotes the state at the half-period crossing. J&#8348; is built by
+          <span class="cap">Subscript h denotes the state at the half-period crossing. J<sub>c</sub> is built by
             finite differences, and the step is damped early in the iteration to keep it stable.</span>
         </div>
 
@@ -504,24 +502,24 @@ footer a:hover{color:var(--accent)}
           precision instead of step size.</p>
 
         <h3 data-rev>Continuation</h3>
-        <p data-rev>Jumping straight to a large amplitude asks Newton to converge from far outside its
-          basin. Instead the amplitude is walked up: A<sub>z</sub> is stepped from 2,000 km to the target
-          120,000 km across sixty increments, and the corrector re-converges at each one, each converged
-          solution seeding the next. The orbit is grown rather than guessed.</p>
+        <p data-rev>Going straight to the target amplitude would ask Newton to converge from well outside
+          its basin, so the amplitude is walked up instead. A<sub>z</sub> steps from 2,000 km to 120,000 km
+          over sixty increments, with the corrector re-converging at each one and each solution seeding
+          the next.</p>
 
         <div class="note" data-rev>
           <span class="k">Why the tolerance is 10&#8315;&#8313; and not machine precision</span>
           <p>The corrector's Jacobian is built by finite differences with a step of 10&#8315;&#8310;, on
             trajectories integrated to a relative tolerance of 3&times;10&#8315;&#185;&#179;. That puts a
-            noise floor of roughly integrator tolerance over step size on the Jacobian itself. Demanding
-            a residual tighter than that noise does not buy accuracy, it stalls the iteration short of the
-            target. 10&#8315;&#8313; sits above the floor and still corresponds to a position error on the
-            order of centimetres.</p>
+            noise floor of roughly integrator tolerance over step size on the Jacobian itself. Asking for a
+            residual tighter than that noise does not improve accuracy; it stalls the iteration short of
+            the target. 10&#8315;&#8313; sits above the floor and still corresponds to a position error on
+            the order of centimetres.</p>
         </div>
 
         <h3 data-rev>Verification</h3>
-        <p data-rev>A corrector that reports success is not evidence of a periodic orbit. The converged
-          state is propagated one full period at tight tolerance and compared against where it started:</p>
+        <p data-rev>The corrector converging is not the same thing as the orbit closing, so the converged
+          state is propagated one full period at tight tolerance and compared with where it started:</p>
 
         <div class="eq" data-rev>
           <span class="tex">T = 2t_{1/2}, \qquad \varepsilon = \left\lVert \mathbf{r}(T) - \mathbf{r}(0) \right\rVert d</span>
@@ -552,27 +550,23 @@ footer a:hover{color:var(--accent)}
             line. Axes in km, relative to L1.</figcaption>
         </figure>
 
-        <p data-rev>The orbit that comes out is not small &mdash; it takes just under six months to go
-          round once. The insertion figure is the speed the spacecraft must already have when it arrives,
-          measured against a vehicle sitting still at that point in the rotating frame. It is the cost of
-          joining the orbit, not of holding it.</p>
+        <p data-rev>One revolution takes just under six months. The insertion figure is the speed the
+          spacecraft needs on arrival, measured against a vehicle at rest at that point in the rotating
+          frame. Holding the orbit afterwards costs extra, and that is what the next section is about.</p>
 
-        <h3 data-rev>The orbit does not stay put</h3>
-        <p data-rev>The last check is the one that matters most. The converged orbit is propagated five
-          full periods with no correction applied. It closes to within 228 m over the first period and is
-          14.5 million km away by the end of the fifth.</p>
+        <h3 data-rev>Five periods, no corrections</h3>
+        <p data-rev>The last check propagates the converged orbit five full periods with nothing applied
+          to hold it. It closes to within 228 m over the first period and ends up 14.5 million km from
+          where it started by the fifth.</p>
 
-        <p data-rev>That is not the solver failing. L1 is a saddle point, so the halo around it inherits
-          the instability, and the error grows exponentially rather than linearly &mdash; sub-kilometre
-          after one revolution, a tenth of an AU after five. Change the integrator and the five-period
-          number moves by a factor of several, which is not a defect in the measurement so much as the
-          measurement itself: an orbit this unstable amplifies whatever it is given, including rounding.
-          Nothing about the orbit is wrong. It simply will not hold itself.</p>
+        <p data-rev>That divergence is physical rather than numerical. L1 is a saddle point and the halo
+          around it inherits the instability, so error grows exponentially: under a kilometre after one
+          revolution, a tenth of an AU after five. The exact five-period figure depends on the integrator
+          &mdash; swapping ode113 for a Dormand&ndash;Prince scheme moves it by a factor of four &mdash;
+          because an orbit this unstable amplifies whatever it is handed, rounding included.</p>
 
-        <p data-rev>Which is exactly why the station-keeping figure from section 07 exists. The
-          0.2 to 0.4 m/s is not overhead on an otherwise stable orbit. It is the cost of continuously
-          cancelling this drift, and the five-period propagation is what makes that number mean something
-          rather than being quoted.</p>
+        <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for: continuously cancelling
+          a drift the orbit would otherwise follow all the way out.</p>
 
         <div class="viewer" data-rev>
           <span class="k">Interactive &middot; in progress</span>
