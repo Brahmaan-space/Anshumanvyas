@@ -239,14 +239,26 @@ const fingers = [-1, 1].map((sgn) => {
 });
 
 /* ----------------------------------------------------------------- debris */
-// A stand-in for the ENVISAT body: bus, one boom-mounted panel, and the grapple
-// fixture the gripper closes on. The fixture sits at the tool tip's capture
-// position, so the arm meets it there and nothing has to be nudged into place.
+// A stand-in for the ENVISAT body: a bus, one boom-mounted panel, and a grapple
+// post standing off the bus for the gripper to close around.
+//
+// The post is the whole reason this reads correctly. Grabbing a flat face means
+// the fingers have to end up inside the body, because the fingers run forward of
+// the tool tip and the tip is what the inverse kinematics aims. A post gives the
+// fingers somewhere to be that is not inside the satellite, which is why real
+// capture hardware has one.
+//
+// Local frame: +x runs out along the post, -y out along the boom.
 const debris = new Group();
 world.add(debris);
 
+const BUS = 0.062;                 // half of the bus is 31 mm, so the face is at x = 0.0425
+const POST_R = 0.005;
+const GRASP_X = 0.098;             // where on the post the fingers close
+const POST_END = 0.130;
+
 const bus = new Mesh(
-  new BoxGeometry(0.085, 0.062, 0.062),
+  new BoxGeometry(0.085, BUS, BUS),
   new MeshStandardMaterial({ color: 0x2b3752, roughness: 0.75, metalness: 0.35 })
 );
 debris.add(bus);
@@ -255,17 +267,44 @@ debris.add(new LineSegments(
   new LineBasicMaterial({ color: SLATE, transparent: true, opacity: 0.7 })
 ));
 
-const boom = new Mesh(new CylinderGeometry(0.004, 0.004, 0.060, 10),
+const matHW = new MeshStandardMaterial({ color: 0x8593ad, roughness: 0.45, metalness: 0.7 });
+
+// Post: a base collar on the bus face, the shaft, and an end flange that stops
+// the gripper running off the end of it.
+const collar = new Mesh(new CylinderGeometry(0.014, 0.017, 0.014, 20), matHW);
+collar.rotation.z = -Math.PI / 2;
+collar.position.x = 0.047;
+debris.add(collar);
+
+const post = new Mesh(
+  new CylinderGeometry(POST_R, POST_R, POST_END - 0.047, 16), matHW);
+post.rotation.z = -Math.PI / 2;
+post.position.x = (0.047 + POST_END) / 2;
+debris.add(post);
+
+const flange = new Mesh(new CylinderGeometry(0.012, 0.012, 0.007, 20), matHW);
+flange.rotation.z = -Math.PI / 2;
+flange.position.x = POST_END;
+debris.add(flange);
+
+// The band the fingers actually close on, marked so the target is obvious.
+const fixture = new Mesh(
+  new CylinderGeometry(POST_R * 1.15, POST_R * 1.15, 0.020, 18),
+  new MeshBasicMaterial({ color: ACCENT })
+);
+fixture.rotation.z = -Math.PI / 2;
+debris.add(fixture);
+
+const boom = new Mesh(new CylinderGeometry(0.004, 0.004, 0.055, 10),
   new MeshStandardMaterial({ color: SLATE, roughness: 0.6, metalness: 0.5 }));
-boom.rotation.z = Math.PI / 2;
-boom.position.x = -0.070;
+boom.position.y = -0.058;
 debris.add(boom);
 
 const panel = new Mesh(
-  new BoxGeometry(0.005, 0.150, 0.058),
+  new BoxGeometry(0.062, 0.150, 0.005),
   new MeshStandardMaterial({ color: 0x14305c, roughness: 0.35, metalness: 0.65 })
 );
-panel.position.x = -0.102;
+panel.position.y = -0.160;
 debris.add(panel);
 const panelEdge = new LineSegments(
   new EdgesGeometry(panel.geometry),
@@ -273,12 +312,6 @@ const panelEdge = new LineSegments(
 );
 panelEdge.position.copy(panel.position);
 debris.add(panelEdge);
-
-const fixture = new Mesh(
-  new SphereGeometry(0.013, 20, 14),
-  new MeshBasicMaterial({ color: ACCENT })
-);
-debris.add(fixture);
 
 /* ------------------------------------------------------------- tip trace */
 // The whole path is uploaded once and revealed with a draw range, so the trace
@@ -314,34 +347,57 @@ for (const p of WP_WORLD) {
 }
 
 /* ------------------------------------------------- debris resting placement */
-// Fixed rest pose, chosen so the fixture lands exactly on the capture point.
-const CAPTURE_POINT = WP_WORLD[CAPTURE].clone();
-// Yaw chosen so the panel points out and away from the base rather than back
-// through it: the arm has to be able to close on the fixture without the boom
-// occupying the same space as the shoulder.
-const DEBRIS_REST_EULER = new Euler(0.14, -0.20, 2.69);
-const DEBRIS_REST_Q = new Quaternion().setFromEuler(DEBRIS_REST_EULER);
-// The fixture sits on the face of the bus that the gripper comes in against.
-const FIXTURE_LOCAL = new Vector3(0.050, 0.0, 0.030);
-fixture.position.copy(FIXTURE_LOCAL);
-
 const _m4 = new Matrix4();
 const _v = new Vector3();
+
+// The tool tip is not the grasp point. The fingers start 20 mm forward of the
+// tip and run to 62 mm, so what they close on is about 38 mm out along the tool
+// axis. Aiming the inverse kinematics at the tip and then putting the payload at
+// the tip is what made the gripper look like it was reaching into the body.
+const GRASP_OFFSET = 0.038;
+
+const CAPTURE_POINT = WP_WORLD[CAPTURE].clone();     // where the tool tip goes
+const APPROACH = new Vector3();                      // tool z at capture, world
+const GRASP_POINT = new Vector3();
+{
+  fk(WP[CAPTURE].q, POSE);
+  axisOf(POSE.frames[5], 2, APPROACH);
+  GRASP_POINT.copy(CAPTURE_POINT).addScaledVector(APPROACH, GRASP_OFFSET);
+}
+
+const FIXTURE_LOCAL = new Vector3(GRASP_X, 0, 0);
+fixture.position.copy(FIXTURE_LOCAL);
+
+// Orientation is derived, not typed in. Local +x runs back up the approach axis
+// so the post points straight at the incoming gripper, and the boom is laid
+// along the horizontal direction pointing away from the base, which keeps the
+// panel clear of both the deck and the arm.
+const DEBRIS_REST_Q = new Quaternion();
+{
+  const X = APPROACH.clone().negate().normalize();
+  const outward = new Vector3(GRASP_POINT.x, GRASP_POINT.y, 0).normalize();
+  // Remove whatever part of `outward` lies along the post before using it.
+  outward.addScaledVector(X, -outward.dot(X)).normalize();
+  const Y = outward.clone().negate();               // boom sits on local -y
+  const Z = new Vector3().crossVectors(X, Y);
+  DEBRIS_REST_Q.setFromRotationMatrix(
+    new Matrix4().makeBasis(X, Y, Z)
+  );
+}
+
+const DEBRIS_REST_POS = GRASP_POINT.clone()
+  .sub(FIXTURE_LOCAL.clone().applyQuaternion(DEBRIS_REST_Q));
 
 // Offset from the tool frame to the debris frame, frozen at the capture instant
 // so the payload picks up exactly where it was rather than snapping.
 const HOLD = new Matrix4();
 {
   fk(WP[CAPTURE].q, POSE);
-  const toolM = POSE.frames[5].clone();
   const restM = new Matrix4().compose(
-    CAPTURE_POINT.clone().sub(FIXTURE_LOCAL.clone().applyQuaternion(DEBRIS_REST_Q)),
-    DEBRIS_REST_Q, new Vector3(1, 1, 1)
+    DEBRIS_REST_POS, DEBRIS_REST_Q, new Vector3(1, 1, 1)
   );
-  HOLD.copy(toolM).invert().multiply(restM);
+  HOLD.copy(POSE.frames[5]).invert().multiply(restM);
 }
-const DEBRIS_REST_POS = CAPTURE_POINT.clone()
-  .sub(FIXTURE_LOCAL.clone().applyQuaternion(DEBRIS_REST_Q));
 
 /* ------------------------------------------------------------------ update */
 const AX = new Vector3(), O = new Vector3(), OPREV = new Vector3();
@@ -371,7 +427,7 @@ function update(t) {
   tool.quaternion.multiply(_q.setFromUnitVectors(Y, new Vector3(0, 0, 1)));
 
   // Fingers close over the last stretch of the approach and stay closed.
-  const grip = MathUtils.clamp((s - 2.35) / 0.6, 0, 1);
+  const grip = MathUtils.clamp((s - 2.45) / 0.5, 0, 1);
   for (const f of fingers) {
     f.g.position.x = f.sgn * (0.017 - 0.008 * grip);
     f.g.rotation.z = -f.sgn * 0.20 * grip;
@@ -653,8 +709,12 @@ window.__viewer = {
     const q = qAt(s);
     fk(q, POSE);
     const tip = originOf(POSE.frames[5], new Vector3());
+    const zAx = axisOf(POSE.frames[5], 2, new Vector3());
+    // What the fingers are actually round, not where the tool origin is.
+    const grasp = tip.clone().addScaledVector(zAx, GRASP_OFFSET);
     const fx = fixture.getWorldPosition(new Vector3());
     const tipW = tip.clone().applyMatrix4(world.matrixWorld);
+    const graspW = grasp.clone().applyMatrix4(world.matrixWorld);
     camera.updateMatrixWorld(true);
     camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
     const screen = tipW.clone().project(camera);
@@ -662,7 +722,7 @@ window.__viewer = {
       s, time, qDeg: q.map((v) => v * 180 / Math.PI),
       tip: [tip.x, tip.y, tip.z],
       reach: tip.length(),
-      gripGapMm: fx.distanceTo(tipW) * 1000,
+      gripGapMm: fx.distanceTo(graspW) * 1000,
       overrunDeg: q.reduce((acc, v, i) => {
         const d = v * 180 / Math.PI;
         return acc + Math.max(0, LIMITS[i][0] - d) + Math.max(0, d - LIMITS[i][1]);

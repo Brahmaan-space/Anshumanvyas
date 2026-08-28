@@ -173,7 +173,31 @@ def solve(T_target, near=None):
                 score = (round(overrun(q), 9), travel)
                 if best is None or score < best[0]:
                     best = (score, q)
-    return best[1] if best else None
+    if best is None:
+        return None
+    return settle_wrist(best[1], T_target, near)
+
+
+def settle_wrist(q, T_target, near):
+    """Resolve the split between joints 4 and 6 when joint 5 is near zero.
+
+    With joint 5 at zero the axes of joints 4 and 6 line up, so only their sum
+    is determined by the target and atan2 is free to return any split it likes.
+    Two waypoints a few centimetres apart can come back with the same tool pose
+    but a 50 degree difference on joint 4, and interpolating between them swings
+    the wrist out and back for no reason. When that happens, hold joint 4 where
+    the previous waypoint had it and give the remainder to joint 6.
+    """
+    if near is None or abs(math.sin(q[4])) > 0.12:
+        return q
+    total = q[3] + q[5] if math.cos(q[4]) > 0 else q[5] - q[3]
+    t4 = near[3]
+    t6 = wrap(total - t4) if math.cos(q[4]) > 0 else wrap(total + t4)
+    fixed = [q[0], q[1], q[2], t4, q[4], t6]
+    dp, da = pose_error(fixed, T_target)
+    if dp < 1e-9 and da < 1e-7 and overrun(fixed) <= overrun(q) + 1e-12:
+        return fixed
+    return q
 
 
 def solve_pose(p, look, near=None, rolls=72):
@@ -230,8 +254,26 @@ def pose(p, look, roll=0.0):
 # The debris drifts past off the front right of the base. The arm reaches out to
 # meet it, closes on the grapple fixture, lifts it clear of its drift path and
 # swings it round to the stowage point on the other side.
-DEBRIS = np.array([0.270, -0.132, 0.190])
-APPROACH_AXIS = np.array([0.62, -0.30, -0.72])     # tool z at the fixture
+# This is where the TOOL TIP goes, not where the debris is. The gripper fingers
+# run forward of the tip, so the grapple post the arm actually closes on sits
+# further along the approach axis and the satellite body further still. Putting
+# the body at the tip position is what makes an arm look like it is reaching
+# through its payload.
+DEBRIS = np.array([0.262, -0.128, 0.245])
+
+# The gripper comes down onto the post at 74 degrees below horizontal, near
+# enough straight down. That is not a styling choice: a shallower approach on
+# this arm puts joint 5 within a fraction of a degree of zero at the moment of
+# capture, which is the wrist singularity, and the whole approach direction was
+# searched to find one that stays about 49 degrees clear of it.
+_TILT = math.radians(74.0)
+_BEARING = math.atan2(DEBRIS[1], DEBRIS[0])
+APPROACH_AXIS = np.array([
+    math.cos(_TILT) * math.cos(_BEARING),
+    math.cos(_TILT) * math.sin(_BEARING),
+    -math.sin(_TILT),
+])
+
 BERTH = np.array([0.054,  0.254, 0.330])
 
 # Approach and retreat run along the tool axis, so the gripper never crabs
@@ -241,20 +283,71 @@ def along(k):
     return DEBRIS - k * v
 
 WAYPOINTS = [
-    ("Stowed",   "Folded in against the station. Nothing is loaded.",
+    ("Stowed",   "Folded in against the station, nothing loaded.",
      {'q': [0.0, math.radians(-56.0), math.radians(66.0), 0.0,
             math.radians(-16.0), 0.0]}),
-    ("Standoff", "Lined up on the grapple fixture and held off by 110 mm.",
-     {'p': along(0.110), 'look': APPROACH_AXIS}),
-    ("Approach", "Closing straight down the tool axis, so the gripper never crabs sideways across the fixture.",
-     {'p': along(0.040), 'look': APPROACH_AXIS}),
-    ("Capture",  "Gripper closed on the fixture. The shoulder sits under 4 degrees off its forward limit here.",
-     {'p': along(0.0), 'look': APPROACH_AXIS}),
-    ("Lift",     "Backed off along the same line, debris off its drift path.",
-     {'p': along(0.130), 'look': APPROACH_AXIS}),
+    ("Standoff", "Lined up on the grapple post, held off by 110 mm.",
+     {'p': along(0.110), 'look': APPROACH_AXIS, 'group': 'approach'}),
+    ("Approach", "Closing along the tool axis, so the gripper does not slide sideways across the post.",
+     {'p': along(0.040), 'look': APPROACH_AXIS, 'group': 'approach'}),
+    ("Capture",  "Fingers closed around the post. The shoulder is about 8 degrees off its forward limit here.",
+     {'p': along(0.0), 'look': APPROACH_AXIS, 'group': 'approach'}),
+    ("Lift",     "Backed off along the same line, with the satellite off its drift path.",
+     {'p': along(0.130), 'look': APPROACH_AXIS, 'group': 'approach'}),
     ("Berth",    "Swung round to the stowage point and set down.",
      {'p': BERTH, 'look': [0.10, 0.50, -0.86]}),
 ]
+
+
+def solve_group(specs, rolls=180):
+    """Solve several waypoints that share one tool axis, on one common roll.
+
+    Solving each of these on its own lets the sweep pick a different roll for
+    each, and the wrist then unwinds tens of degrees over the last few
+    centimetres of the approach. Since they all sit on one line, the roll is a
+    property of the approach and not of any single waypoint: sweep it once,
+    solve the whole group at each value, and keep the roll that is feasible
+    everywhere and moves the joints least.
+    """
+    # Rolls are also rejected for taking the wrist through its singularity.
+    # When joint 5 passes through zero the axes of joints 4 and 6 line up, only
+    # their sum is determined by the target, and the two joints are free to take
+    # any split that adds up. Consecutive waypoints then come back with the same
+    # tool pose and wildly different joint 4, and the interpolation between them
+    # throws the wrist out and back. Keeping joint 5 well away from zero is the
+    # fix; redistributing the angles afterwards is not, because a few degrees of
+    # joint 5 is enough to make the two splits genuinely different orientations.
+    for floor_deg in (18.0, 12.0, 8.0, 0.0):
+        best = None
+        for i in range(rolls):
+            roll = 2 * PI * i / rolls
+            qs, Ts, ok = [], [], True
+            prev = None
+            for spec in specs:
+                T = pose(spec['p'], spec['look'], roll)
+                q = solve(T, prev)
+                if q is None or overrun(q) > 1e-9:
+                    ok = False
+                    break
+                if abs(math.degrees(q[4])) < floor_deg:
+                    ok = False
+                    break
+                qs.append(q)
+                Ts.append(T)
+                prev = q
+            if not ok:
+                continue
+            # Total joint travel across the group, so the calmest wrist wins.
+            travel = sum(abs(b - a) for x, y in zip(qs, qs[1:]) for a, b in zip(x, y))
+            if best is None or travel < best[0]:
+                best = (travel, qs, Ts)
+        if best is not None:
+            worst5 = min(abs(math.degrees(q[4])) for q in best[1])
+            print(f'approach group: one roll for all {len(specs)} waypoints, '
+                  f'{math.degrees(best[0]):.1f} deg total joint travel, '
+                  f'joint 5 stays {worst5:.1f} deg off its singularity')
+            return best[1], best[2]
+    raise SystemExit('no single roll solves the whole approach group')
 
 
 def interpolate(qa, qb, n):
@@ -264,6 +357,12 @@ def interpolate(qa, qb, n):
 
 
 def main():
+    # Everything on the approach axis is solved together, on one shared roll.
+    grouped = [s for _, _, s in WAYPOINTS if s.get('group') == 'approach']
+    gq, gT = solve_group(grouped)
+    for spec, q, T in zip(grouped, gq, gT):
+        spec['solved'] = (q, T)
+
     solutions = []
     prev = None
     for name, note, spec in WAYPOINTS:
@@ -272,6 +371,8 @@ def main():
             # given directly and the pose is whatever forward kinematics says.
             q = spec['q']
             T = ee(q)
+        elif 'solved' in spec:
+            q, T = spec['solved']
         else:
             q, T = solve_pose(spec['p'], spec['look'], near=prev)
             if q is None:

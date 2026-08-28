@@ -259,10 +259,10 @@ footer a:hover{color:var(--accent)}
     <a class="back" href="../../#work">&larr; Selected work</a>
     <span class="eyebrow" data-rev>02 &middot; Manipulator</span>
     <h1 data-rev>Reaching ENVISAT</h1>
-    <p class="dek" data-rev>Eight tonnes of dead satellite has been drifting in a crowded orbit since 2012.
-      Catching it is a robotics problem before it is anything else. This is a six-jointed arm
-      worked out far enough to answer one question: given a point in space you want the gripper
-      to be at, what does every joint have to do to put it there.</p>
+    <p class="dek" data-rev>ENVISAT has been dead in a busy orbit since 2012 and it weighs eight tonnes.
+      Anything sent up to remove it needs a manipulator on it. This is a six-joint arm worked out far
+      enough to answer the question that matters for planning: if you pick a point on the satellite
+      you want to grab, what does each joint have to read to put the gripper there.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Target</dt><dd>ENVISAT<br>8,211 kg, 26 m</dd></div>
@@ -278,10 +278,11 @@ footer a:hover{color:var(--accent)}
     <figure class="viewer wide">
       <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Arm viewer: reach, capture and carry"></iframe>
       <figcaption><b>Interactive &middot; reach, capture and carry</b>
-        The arm here is not a model of a robot. It is the Denavit-Hartenberg table on this page,
-        evaluated in the browser every frame, moving through the six waypoints the inverse
-        kinematics solved for. The bars on the right are the real joint angles against the real
-        travel limits, and they turn amber when a joint gets within ten per cent of a stop.
+        The arm is drawn straight from the Denavit-Hartenberg table further down the page. The browser
+        runs the forward kinematics every frame and hangs the geometry off the result, so none of this
+        is a hand-built model, and it is moving through the six waypoints the inverse solver produced.
+        The bars on the right are the actual joint angles against the actual travel limits from Table 1.
+        They turn amber when a joint gets within ten per cent of a stop.
         <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
     </figure>
   </section>
@@ -300,45 +301,50 @@ footer a:hover{color:var(--accent)}
       <!-- ============================================================ 01 -->
       <section id="target">
         <div class="sechead" data-rev><span class="n">01</span><h2>The target</h2></div>
-        <p class="lead" data-rev>ENVISAT is the largest civil Earth observation satellite ever flown and it has
-          been dead since 2012. Nothing on it works, which means it cannot be told to move.</p>
+        <p class="lead" data-rev>ENVISAT was the largest civil Earth observation satellite ever flown, and it
+          has been dead since 2012.</p>
 
-        <p data-rev>It launched in March 2002 and ESA lost contact on 8 April 2012. It masses 8,211 kg and spans
-          26 m with the solar array out, and it sits in a sun-synchronous orbit near 790 km, which
-          is one of the busier bands in low Earth orbit. Left alone it stays there for something
-          like 150 years. A satellite that size cannot dodge, and if it is ever hit the debris goes
-          into the same altitude everything else is using.</p>
+        <p data-rev>It launched in March 2002 and ESA lost contact with it on 8 April 2012. It weighs
+          8,211 kg, spans about 26 m with the solar array deployed, and sits in a sun-synchronous orbit
+          near 790 km, which is one of the busier altitudes in low Earth orbit. Estimates put it up
+          there for roughly another 150 years.</p>
 
-        <p data-rev>So somebody has to go and get it, and whatever goes has to have an arm on it. The
-          question I wanted to answer is a narrow one. Given a fixed point on that body that you
-          want the gripper to be at, and a direction you want to come in from, what does every
-          joint have to do. Everything on this page follows from that.</p>
+        <p data-rev>The problem is that nothing on it responds any more, so it cannot be moved out of the
+          way of anything. If something does hit it, the debris ends up spread through an altitude band
+          that a lot of other satellites are using.</p>
+
+        <p data-rev>Any mission that goes up to remove it needs a manipulator, and I wanted to work out
+          what that manipulator actually has to do. Specifically: if you choose a point on the satellite
+          to grab and a direction to come in from, what angle does each of the six joints need to be at.
+          The rest of the page is that question worked through.</p>
 
         <div class="note" data-rev>
           <span class="k">On scale</span>
-          <p>The arm is sized on the Niryo One, a 500 mm educational robot, not on anything that
-            could hold eight tonnes. That is deliberate. The kinematics do not care about mass:
-            the same six transformation matrices describe a half-metre arm and a fifteen-metre
-            one. Working at a size whose real geometry is published meant I could tell the
-            difference between an answer that was right and an answer that merely converged.</p>
+          <p>I sized the arm on the Niryo One, which is a 500 mm educational robot, rather than on
+            something that could actually handle eight tonnes. The kinematics do not depend on mass, so
+            the same six transformation matrices apply whether the arm is half a metre long or fifteen.
+            Working at a size where the manufacturer publishes real geometry meant I could check my
+            answers against something instead of just trusting them.</p>
         </div>
       </section>
 
       <!-- ============================================================ 02 -->
       <section id="design">
         <div class="sechead" data-rev><span class="n">02</span><h2>Design of the manipulator</h2></div>
-        <p data-rev>Serial chain. Six revolute joints, one link between each pair, base fixed to the station
-          and a gripper on the far end. Nothing branches, so every joint carries everything
-          outboard of it and the pose of the gripper is a product of six transformations taken in
-          order.</p>
+        <p data-rev>The arm is a serial chain. Six revolute joints with a link between each pair, the base
+          fixed to the station, and a gripper on the far end. Nothing branches off, so each joint has to
+          carry everything outboard of it, and the pose of the gripper is just the product of six
+          transformations taken in order.</p>
 
-        <p data-rev>Two decisions do most of the work. The first is putting the last three joint axes through a
-          single point, which makes the wrist spherical. That is not a styling choice. It is what
-          splits the inverse problem into a position half and an orientation half that can each be
-          solved in closed form. Without it you are running a numerical solver at every waypoint and
-          hoping it lands on the branch you wanted.</p>
+        <p data-rev>Two things about the layout matter more than the rest. The first is that the last
+          three joint axes all pass through a single point, which makes the wrist spherical. I did that
+          because it lets the inverse problem split into a position part and an orientation part that can
+          each be solved directly. Without a spherical wrist you have to run a numerical solver at every
+          waypoint, and then you still have to work out which of the several possible answers it landed
+          on.</p>
 
-        <p data-rev>The second is that every joint has a hard stop, and they are not symmetric.</p>
+        <p data-rev>The second is that the joints do not have equal travel and none of them are symmetric
+          about zero.</p>
 
         <div class="tw" data-rev>
           <table>
@@ -357,21 +363,22 @@ footer a:hover{color:var(--accent)}
           </table>
         </div>
 
-        <p data-rev>Joint 2 is the shoulder and it is the tightest thing on the arm. It has 126.7&deg; of
-          travel against 350&deg; for the base, and only 36.7&deg; of it is forward of vertical.
-          That single number shapes the reachable workspace more than any link length does. Every
-          capture point on this page had to be walked back until the shoulder cleared it, and the
-          one the arm actually goes to sits under four degrees off the stop.</p>
+        <p data-rev>Joint 2 is the shoulder and it is the most restricted joint on the arm. It has
+          126.7&deg; of travel where the base has 350&deg;, and only 36.7&deg; of that is forward of
+          vertical. In practice this limit sets the shape of the reachable workspace far more than the
+          link lengths do. I had to move the capture point in twice before the shoulder could reach it,
+          and even now it ends up within 8&deg; of the stop.</p>
       </section>
 
       <!-- ============================================================ 03 -->
       <section id="forward">
         <div class="sechead" data-rev><span class="n">03</span><h2>Forward kinematics</h2></div>
-        <p class="lead" data-rev>Six angles in, one pose out. This is the easy direction, and it is also the thing
-          everything else gets checked against.</p>
+        <p class="lead" data-rev>Forward kinematics means going from a set of joint angles to the position
+          and orientation of the gripper. It is the easier of the two directions, and it is also what I
+          check everything else against.</p>
 
         <p data-rev>The Denavit-Hartenberg convention describes the relationship between two consecutive
-          links with four numbers, and only four, which is the whole reason it is worth using:</p>
+          links using four parameters, and only four, which is the reason it is worth using at all:</p>
 
         <ul data-rev>
           <li><strong>a<sub>i</sub></strong> &middot; length of the link along the common normal</li>
@@ -380,7 +387,7 @@ footer a:hover{color:var(--accent)}
           <li><strong>&theta;<sub>i</sub></strong> &middot; joint angle about the previous z axis, from the old x axis to the new one</li>
         </ul>
 
-        <p data-rev>Each set of four builds one transformation matrix:</p>
+        <p data-rev>Each row of four gives you one transformation matrix:</p>
 
         <div class="eq" data-rev>
           <span class="tex">A_i = \begin{bmatrix}
@@ -391,15 +398,16 @@ footer a:hover{color:var(--accent)}
           <span class="cap">The transformation from frame i&minus;1 to frame i.</span>
         </div>
 
-        <p data-rev>Multiply the six of them in order and you have the gripper in the base frame:</p>
+        <p data-rev>Multiplying all six together gives the transformation from the base frame to the
+          gripper:</p>
 
         <div class="eq" data-rev>
           <span class="tex">T = A_1 A_2 A_3 A_4 A_5 A_6</span>
-          <span class="cap">Rotation in the top left, position in the last column.</span>
+          <span class="cap">Rotation in the top left block, position in the last column.</span>
         </div>
 
-        <p data-rev>These are the parameters this arm runs on. Three of them are zero, which is what a
-          well-chosen frame assignment buys you.</p>
+        <p data-rev>These are the parameters the arm runs on. Three of the a values come out at zero,
+          which is what you get when the frames are assigned sensibly.</p>
 
         <div class="tw" data-rev>
           <table>
@@ -418,10 +426,9 @@ footer a:hover{color:var(--accent)}
           </table>
         </div>
 
-        <p data-rev>Rows 4, 5 and 6 all carry a<sub>i</sub> = 0, which is the spherical wrist written down. The
-          three axes cross at the origin of frame 4 and nowhere else, and the only thing between
-          that point and the tool tip is a 23.7 mm offset along the tool&rsquo;s own z axis. Section 04
-          spends that fact.</p>
+        <p data-rev>Rows 4, 5 and 6 all have a<sub>i</sub> = 0, which is the spherical wrist written out.
+          The three axes meet at the origin of frame 4, and the only thing between that point and the
+          tool tip is a 23.7 mm offset along the tool&rsquo;s own z axis. Section 04 uses that.</p>
 
         <div class="fig2" data-rev>
           <figure>
@@ -438,68 +445,82 @@ footer a:hover{color:var(--accent)}
       <!-- ============================================================ 04 -->
       <section id="inverse">
         <div class="sechead" data-rev><span class="n">04</span><h2>Inverse kinematics</h2></div>
-        <p class="lead" data-rev>The direction you actually need. You know where the gripper has to be. You do not
-          know what any joint should read.</p>
+        <p class="lead" data-rev>Inverse kinematics is the direction you actually need for planning. You
+          know where you want the gripper and which way you want it pointing, and you have to work
+          backwards to the six joint angles.</p>
 
-        <p data-rev>The spherical wrist splits this in two. Where the gripper ends up is decided almost
-          entirely by the first three joints, and which way it points is decided by the last three,
-          so the two halves can be solved one after the other instead of all at once.</p>
+        <p data-rev>Because the wrist is spherical this splits cleanly in two. The position of the gripper
+          is set almost entirely by the first three joints and its orientation by the last three, so the
+          two halves can be solved one after the other rather than together.</p>
 
         <h3 data-rev>Inverse position problem</h3>
-        <p data-rev>Back the tool tip off along its own z axis by the 23.7 mm from the table and you are at
-          the wrist centre, which is the only point on the arm the last three joints cannot move:</p>
+        <p data-rev>If you back the tool tip off along its own z axis by the 23.7 mm from the table, you
+          arrive at the wrist centre, which is the one point on the arm that the last three joints cannot
+          move:</p>
 
         <div class="eq" data-rev>
           <span class="tex">\mathbf{O}_c = \mathbf{O}_{6} - d_6\,\mathbf{R}_{6}[:,3]</span>
           <span class="cap">O<sub>6</sub> and R<sub>6</sub> are the position and orientation you asked for.</span>
         </div>
 
-        <p data-rev>Joint 1 follows straight from where that point sits in plan view. The other two are a
-          planar two-link problem in the vertical plane joint 1 just swept out, with the shoulder at
-          one end and the wrist centre at the other.</p>
+        <p data-rev>Joint 1 comes directly from where that point sits in plan view. Joints 2 and 3 are
+          then a planar two-link problem in the vertical plane joint 1 has just swept out, with the
+          shoulder at one end and the wrist centre at the other.</p>
 
-        <p data-rev>The catch is that the forearm is not a straight link. There is a 41.5 mm offset at the
-          elbow and then 180 mm out to the wrist centre, so the effective link is 184.7 mm long and
-          sits 12.98&deg; off the line you would draw by eye. Ignore that and every solution comes
-          back a couple of centimetres short in a way that looks like a rounding problem and is not.</p>
+        <p data-rev>The part that is easy to get wrong is that the forearm is not a straight link. There is
+          a 41.5 mm offset at the elbow and then 180 mm out to the wrist centre, so the effective link is
+          184.7 mm long and it sits 12.98&deg; off the line you would draw between the two joints. If you
+          ignore that, every solution comes back a couple of centimetres short, and the error looks like a
+          rounding problem rather than a geometry problem.</p>
 
         <div class="eq" data-rev>
           <span class="tex">\cos\delta = \frac{u^2 + v^2 - a_2^2 - L_3^2}{2\,a_2 L_3}, \qquad
             \theta_2 = \operatorname{atan2}(u, v) - \operatorname{atan2}\!\left(L_3\sin\delta,\; a_2 + L_3\cos\delta\right)</span>
-          <span class="cap">&delta; is the elbow bend, u and v the wrist centre in the arm plane. &theta;<sub>3</sub>
-            is &delta; corrected by the 12.98&deg; offset. The sign of sin&delta; picks elbow up or elbow down.</span>
+          <span class="cap">&delta; is the elbow bend and u, v are the wrist centre in the arm plane.
+            &theta;<sub>3</sub> is &delta; corrected by the 12.98&deg; offset, and the sign of sin&delta;
+            picks elbow up or elbow down.</span>
         </div>
 
         <h3 data-rev>Inverse orientation problem</h3>
-        <p data-rev>With the first three angles known, the rotation they produce is known, so strip it off the
-          target and whatever is left is the wrist&rsquo;s job:</p>
+        <p data-rev>Once the first three angles are known, the rotation they produce is known as well, so
+          you can take it off the target and whatever is left is what the wrist has to supply:</p>
 
         <div class="eq" data-rev>
           <span class="tex">\mathbf{R}_{36} = \mathbf{R}_{30}^{\mathsf{T}}\,\mathbf{R}_{60}</span>
-          <span class="cap">The last three angles are read out of the entries of this matrix directly.</span>
+          <span class="cap">The last three angles are read out of the entries of this matrix.</span>
         </div>
 
-        <p data-rev>I take R<sub>30</sub> out of the forward pass rather than deriving it separately. Two
-          derivations of the same rotation is two things that can disagree, and when they do, the
-          error shows up as a pose that is a few degrees off with nothing obviously wrong anywhere.</p>
+        <p data-rev>I take R<sub>30</sub> from the forward kinematics pass rather than deriving it
+          separately. If you derive the same rotation twice you have two things that can disagree with
+          each other, and when they do the symptom is a pose that is a few degrees off with nothing
+          obviously wrong in either derivation.</p>
 
-        <h3 data-rev>Eight answers, one of them useful</h3>
-        <p data-rev>Every reachable pose has eight solutions. Elbow up or down, shoulder reaching forward or
-          leaning back over the base, and the wrist folded either way. All eight put the gripper in
-          exactly the same place. They are not interchangeable.</p>
+        <h3 data-rev>Choosing between the solutions</h3>
+        <p data-rev>Any reachable pose has eight solutions: elbow up or down, shoulder reaching forwards
+          or leaning back over the base, and the wrist folded either way. All eight put the gripper in the
+          same place, but they are not interchangeable.</p>
 
-        <p data-rev>So the solver returns all eight and ranks them. Joint limits first, because a branch that
-          breaks a stop is not a solution. Then distance from the previous waypoint, which is the
-          part that matters more than it looks. Two waypoints 40 mm apart can easily be solved on
-          different branches, and interpolating between them swings the arm through half its
-          workspace and back. On paper that is a smooth path. In the simulator the elbow goes
-          through the payload.</p>
+        <p data-rev>So the solver works out all eight and ranks them. Joint limits come first, since a
+          solution that breaks a stop is not a solution. After that it ranks on how far each one sits from
+          the previous waypoint, and that second test matters more than it sounds. Two waypoints only a
+          few centimetres apart can easily be solved on different branches, and if you then interpolate
+          between them the arm swings through most of its workspace and comes back. The joint angles are
+          valid at both ends. The elbow still goes through the payload on the way.</p>
 
-        <p data-rev>Checking it is straightforward once the forward direction is trusted. Pick 3,000 random
-          configurations inside the joint limits, run forward kinematics to get a pose, hand that
-          pose to the solver, and see whether it gives the angles back. Worst position error across
-          the run was <strong>4&times;10<sup>&minus;13</sup> m</strong>, which is double precision
-          rather than mathematics.</p>
+        <p data-rev>There is a related problem at the wrist. When joint 5 passes through zero the axes of
+          joints 4 and 6 line up, only their sum is determined by the target, and the solver is free to
+          return any split that adds up to it. My first version of the capture approach ran almost
+          straight into that. Joint 4 came back at &minus;50&deg; at the capture waypoint against
+          +6&deg; at the waypoint 40 mm before it, and both were correct as poses. The interpolation
+          between them was not. The fix was to search the approach direction rather than to patch the
+          angles afterwards, because a couple of degrees of joint 5 is enough to make the two splits
+          genuinely different orientations. The approach the arm uses now comes down at 74&deg; below
+          horizontal and keeps joint 5 about 55&deg; clear of zero the whole way in.</p>
+
+        <p data-rev>Checking the solver is straightforward once you trust the forward direction. I generate
+          3,000 random joint configurations inside the limits, run forward kinematics on each to get a
+          pose, hand that pose back to the solver, and compare what comes out. The worst position error
+          over the run was <strong>5&times;10<sup>&minus;16</sup> m</strong>.</p>
 
         <figure data-rev>
           <img src="../figures/arm-ik.png" alt="The arm reaching down and out after the inverse solution placed the gripper at a target">
@@ -511,36 +532,37 @@ footer a:hover{color:var(--accent)}
       <!-- ============================================================ 05 -->
       <section id="path">
         <div class="sechead" data-rev><span class="n">05</span><h2>Path planning</h2></div>
-        <p class="lead" data-rev>A capture is not one pose. It is a sequence, and the arm has to be somewhere
-          sensible at every instant in between.</p>
+        <p class="lead" data-rev>A capture is a sequence of poses rather than a single one, and the arm has
+          to be somewhere sensible at every point in between.</p>
 
-        <p data-rev>Waypoints are given as homogeneous transforms, a rotation and a translation packed
-          together, so each one says both where the gripper goes and which way it faces:</p>
+        <p data-rev>Waypoints are specified as homogeneous transforms, which pack a rotation and a
+          translation into one matrix, so each waypoint says both where the gripper goes and which way it
+          faces:</p>
 
         <div class="eq" data-rev>
           <span class="tex">T = \begin{bmatrix} R & p \\ 0 & 1 \end{bmatrix}</span>
           <span class="cap">R the orientation, p the position.</span>
         </div>
 
-        <p data-rev>Each waypoint goes through the inverse solver once. After that the arm is described by six
-          numbers per waypoint and the path is interpolated between them:</p>
+        <p data-rev>Each waypoint goes through the inverse solver once. After that the arm is described by
+          six numbers per waypoint, and the path between them is interpolated:</p>
 
         <div class="eq" data-rev>
           <span class="tex">q(t) = (1-t)\,q_i + t\,q_{i+1}, \qquad t \in [0,1]</span>
-          <span class="cap">Linear interpolation in joint space, not in task space.</span>
+          <span class="cap">Linear interpolation in joint space rather than in task space.</span>
         </div>
 
-        <p data-rev>That choice is the point of the section. Joint limits are a box: six independent
-          intervals. A straight line between two points inside a box stays inside the box, so if
-          both waypoints are legal then everything between them is legal, for free, with nothing to
-          check. Interpolating the tip along a straight line in space gives you no such guarantee,
-          and you end up testing the limits at every sample and backing off when one trips.</p>
+        <p data-rev>I interpolate in joint space and the reason is the joint limits. The limits are a box,
+          six independent intervals, and a straight line between two points inside a box stays inside the
+          box. So if both waypoints are legal then everything between them is legal as well, and there is
+          nothing left to check. Interpolating the gripper along a straight line in space gives you no
+          such guarantee, and you end up testing the limits at every sample and backing off whenever one
+          trips.</p>
 
-        <p data-rev>What it costs is that the tip does not travel in a straight line. It bows. That is why
-          standoff, approach and capture are three separate waypoints strung along one axis instead
-          of one waypoint and a long move: over the last 40 mm the bow is small enough to ignore,
-          and the gripper comes in down the line it is supposed to rather than crabbing sideways
-          across the fixture.</p>
+        <p data-rev>What it costs is that the tip does not travel in a straight line, it bows out
+          slightly. That is why standoff, approach and capture are three separate waypoints along one
+          line rather than a single long move. Over the last 40 mm the bow is small enough to ignore, and
+          the gripper goes in along the axis of the post instead of sliding sideways across it.</p>
 
         <div class="tw" data-rev>
           <table>
@@ -550,24 +572,26 @@ footer a:hover{color:var(--accent)}
             </thead>
             <tbody>
               <tr><td>Stowed</td><td>0.0</td><td>&minus;56.0</td><td>66.0</td><td>0.0</td><td>&minus;16.0</td><td>0.0</td></tr>
-              <tr><td>Standoff</td><td>&minus;26.2</td><td>6.9</td><td>13.9</td><td>0.5</td><td>25.5</td><td>&minus;0.7</td></tr>
-              <tr><td>Approach</td><td>&minus;26.1</td><td>23.0</td><td>9.1</td><td>0.8</td><td>14.2</td><td>&minus;0.9</td></tr>
-              <tr><td>Capture</td><td>&minus;26.1</td><td><strong>32.9</strong></td><td>3.1</td><td>1.0</td><td>10.3</td><td>&minus;1.1</td></tr>
-              <tr><td>Lift</td><td>&minus;26.2</td><td>2.7</td><td>13.9</td><td>0.5</td><td>29.7</td><td>&minus;0.7</td></tr>
-              <tr><td>Berth</td><td>78.0</td><td>19.3</td><td>&minus;21.8</td><td>0.4</td><td>61.8</td><td>&minus;0.8</td></tr>
+              <tr><td>Standoff</td><td>&minus;26.0</td><td>24.8</td><td>&minus;37.5</td><td>0.0</td><td>86.7</td><td>&minus;116.9</td></tr>
+              <tr><td>Approach</td><td>&minus;26.0</td><td>25.3</td><td>&minus;16.5</td><td>0.0</td><td>65.2</td><td>&minus;116.9</td></tr>
+              <tr><td>Capture</td><td>&minus;26.0</td><td><strong>28.9</strong></td><td>&minus;9.9</td><td>0.0</td><td>55.1</td><td>&minus;116.9</td></tr>
+              <tr><td>Lift</td><td>&minus;26.0</td><td>27.1</td><td>&minus;48.0</td><td>0.0</td><td>94.9</td><td>&minus;116.9</td></tr>
+              <tr><td>Berth</td><td>78.0</td><td>19.3</td><td>&minus;21.8</td><td>0.4</td><td>61.8</td><td>&minus;115.8</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p data-rev>Degrees. Joint 2 at capture is the number to watch: 32.9&deg; against a 36.7&deg; stop.
-          Joint 1 barely moves across the three approach waypoints, because the whole approach runs
-          along one line and the base does not need to turn to follow it. It then does 104&deg; on
-          its own during the carry.</p>
+        <p data-rev>All in degrees. Joint 2 is the one to watch at capture, 28.9&deg; against a 36.7&deg;
+          stop. Joint 1 holds at &minus;26&deg; through all four approach waypoints because the approach
+          runs along a single line and the base does not have to turn to follow it, then it does 104&deg;
+          on its own during the carry. Joint 6 does not move at all through the approach, which is what
+          you get by solving the four collinear waypoints on one shared tool roll instead of letting each
+          one choose its own.</p>
 
         <figure data-rev>
-          <img src="../figures/arm-path-plot.png" alt="Waypoints plotted in three dimensions with the arm at the origin and a red path connecting them">
+          <img src="../figures/arm-path-plot.png" alt="Waypoints plotted in three dimensions with the arm at the origin and a path connecting them">
           <figcaption><b>Figure 4 &middot; Waypoints</b>
-            The planned trajectory in the task space, with the arm at the origin.</figcaption>
+            The planned trajectory in task space, with the arm at the origin.</figcaption>
         </figure>
 
         <p class="seealso" data-rev><a href="viewer/#capture">Watch the approach and grasp on their own &#8599;</a></p>
@@ -576,29 +600,29 @@ footer a:hover{color:var(--accent)}
       <!-- ============================================================ 06 -->
       <section id="limits">
         <div class="sechead" data-rev><span class="n">06</span><h2>What this does not do</h2></div>
-        <p class="lead" data-rev>Everything above is kinematics. There are no masses in it anywhere.</p>
+        <p class="lead" data-rev>All of the above is kinematics. There is no mass anywhere in it.</p>
 
-        <p data-rev>That is the honest limit of the work. The arm knows where its joints have to be and
-          nothing about what it costs to put them there. No inertias, no joint torques, no reaction
-          back into the station, no contact model at the gripper. For a 500 mm arm on a bench that
-          is a reasonable thing to leave out. For eight tonnes of tumbling satellite it is the part
-          that decides whether the capture works, because the moment the gripper closes, the arm
-          and the debris become one body and whatever angular momentum ENVISAT had is now the
-          station&rsquo;s problem.</p>
+        <p data-rev>That is the honest limit of the work. The arm knows what angles its joints need to be
+          at and nothing about what it costs to get them there. No inertias, no joint torques, no reaction
+          back into the station, no contact model at the gripper. For a half-metre arm on a bench that is
+          a reasonable thing to leave out. For eight tonnes of tumbling satellite it is the part that
+          decides whether the capture works at all, because as soon as the gripper closes the arm and the
+          debris are one body and whatever angular momentum ENVISAT had becomes the station&rsquo;s
+          problem.</p>
 
-        <p data-rev>Two smaller things. Straight-line interpolation in joint space means every joint runs at
-          a constant rate and then reverses direction instantly at each waypoint, which no real
-          actuator will do. A trapezoidal or S-curve velocity profile over the same joint path
-          fixes that without changing anything above it. And nothing here checks the arm against
-          itself or against the payload. The branch-continuity rule in section 04 avoids the
-          obvious collisions by keeping consecutive waypoints on the same solution family, but that
-          is avoiding the problem rather than solving it.</p>
+        <p data-rev>There are two smaller gaps as well. Interpolating in a straight line through joint
+          space means every joint runs at a constant rate and then reverses direction instantly at each
+          waypoint, which no real actuator will do. Putting a trapezoidal or S-curve velocity profile over
+          the same joint path would fix that without changing anything above it. And nothing here checks
+          the arm against itself or against the payload. The branch continuity rule in section 04 avoids
+          the obvious collisions by keeping consecutive waypoints in the same family of solutions, but
+          that is working around the problem rather than solving it.</p>
 
-        <p data-rev>The original MATLAB and the CoppeliaSim scene are gone. The parameters in section 03
-          came back out of the manufacturer&rsquo;s published geometry, and the kinematics on this
-          page were rewritten from scratch and checked against themselves, which is why there is a
-          round-trip residual quoted in section 04 rather than a screenshot. The figures are from
-          the original simulation.</p>
+        <p data-rev>The original MATLAB and the CoppeliaSim scene are both lost. The parameters in section
+          03 came back out of the manufacturer&rsquo;s published geometry, and I rewrote the kinematics
+          from scratch and checked them against themselves, which is why section 04 quotes a round-trip
+          residual rather than showing a screenshot. The simulation figures are from the original
+          work.</p>
       </section>
 
       <div class="pageend" data-rev>
