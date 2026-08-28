@@ -151,6 +151,14 @@ function arcTable(pts, scale) {
   return { cum, L: cum[cum.length - 1] };
 }
 
+/** Index at an absolute arc length along the polyline. */
+function indexAtLength(tab, L) {
+  const target = MathUtils.clamp(L, 0, tab.L);
+  let lo = 0, hi = tab.cum.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (tab.cum[mid] < target) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
 /** Index at a given fraction of total arc length (binary search). */
 function indexAtArc(tab, u) {
   const target = u * tab.L;
@@ -341,6 +349,7 @@ A2.add(dot(AMBER, 0.16, 0.20, true));
 const arcLine = polyline(DATA.transfer, S2, ACCENT, 0.95);
 arcLine.geometry.setDrawRange(0, 0);
 A2.add(arcLine);
+const transferArc = arcTable(DATA.transfer, S2);
 
 const earth2 = dot(0x6ba8e8, 0.022);
 earth2.position.set(M.earthRotKm / S2, 0, 0);
@@ -498,6 +507,9 @@ const R_HANDOVER_2 = 2.0e6;                  // floor only; the approach rule wi
 // side is twice as far as its semi-major axis, so centring on Earth wastes half
 // the frame.
 const RB = DATA.raises.map((x) => bounds(x.pts, S1));
+// Where act 1 leaves the spacecraft. Act 1 used to hand the camera over centred
+// on Earth, which meant act 2 had to jump 925,000 km to pick the craft up.
+const SOI_EXIT = toWorld(at(DATA.escape, S1, DATA.escape.length - 1));
 
 // Framing radius in km, across the whole run.
 const R_KM = (() => {
@@ -530,7 +542,7 @@ function radiusKm(t) {
 
 const AZ_KEYS = [
   [0, 0.55], [A1_ESC0, 1.35], [T_HANDOVER_1, 1.55],
-  [ACTS[1].t0 + 4, 1.25], [ACTS[1].t1 - 4.6, 0.42],
+  [ACTS[1].t0 + 5.5, 1.08], [ACTS[1].t1 - 4.6, 0.42],
   [T_HANDOVER_2, 0.05], [ACTS[2].t0 + 5, -0.42], [ACTS[2].t1, -0.72]
 ];
 const EL_KEYS = [
@@ -584,7 +596,7 @@ function placeCamera(t) {
     // the anchor the next act has to match.
     trackVec(
       [[0, RB[0].c], ...RB.map((b, i) => [A1_W[i][0] - 0.3, b.c]),
-       [A1_ESC0 - 0.2, RB[4].c], [T_HANDOVER_1, new Vector3(0, 0, 0)]],
+       [A1_ESC0 - 0.2, RB[4].c], [T_HANDOVER_1, SOI_EXIT]],
       t, camTgt
     );
     camTgt.add(A1.position);   // act 1 rides with Earth; read it, do not assume
@@ -599,11 +611,17 @@ function placeCamera(t) {
     // vanishes for five seconds), or scale one vector toward the origin, which
     // walks the target down the Sun line rather than between two points. The
     // pan only starts once the frame is wide enough to keep the craft inside.
+    // Spacecraft -> Earth -> the Sun-Earth midpoint -> spacecraft again.
+    // It opens on the craft because that is exactly where act 1 left the camera,
+    // and because the point of this beat is that the craft is already on a solar
+    // orbit: hold on it, rotate slowly and pull back, and the new orbit reveals
+    // itself around it.
+    const settle = smooth(span(t, ACTS[1].t0 + 1.2, ACTS[1].t0 + 5.5));
     const away = smooth(span(t, ACTS[1].t1 - 8.0, ACTS[1].t1 - 5.0));
     const back = smooth(span(t, ACTS[1].t1 - 4.0, ACTS[1].t1 - 2.6));
     earth2.getWorldPosition(tmpV);
     craft2.getWorldPosition(tmpW);
-    camTgt.copy(tmpV).lerp(ORIGIN, away * 0.5).lerp(tmpW, back);
+    camTgt.copy(tmpW).lerp(tmpV, settle).lerp(ORIGIN, away * 0.5).lerp(tmpW, back);
   } else {
     // Opens on the spacecraft, which is exactly where act 2 left it, then
     // slides to sit between Earth and L1 once the halo is the subject.
@@ -689,8 +707,23 @@ function update(t) {
   }
   if (a2 > 0) {
     const f = span(t, ACTS[1].t0, ACTS[1].t1);
-    arcLine.geometry.setDrawRange(0, Math.round(f * ARC_STOP) + 1);
-    craft2.position.copy(at(DATA.transfer, S2, f * ARC_STOP));
+    const head = f * ARC_STOP;
+    craft2.position.copy(at(DATA.transfer, S2, head));
+
+    // The arc is drawn as a trail growing out of the spacecraft rather than as
+    // the whole path from its start. Early in the act the camera is only about
+    // a million km wide while the arc already begins tens of millions of km
+    // back, so drawing from index 0 put a hard straight line across the frame
+    // and out of the corner. The trail is capped to a length the current frame
+    // can actually show, and opens up on its own as the camera pulls back.
+    // Capped to what the frame can show early on, then released as the camera
+    // pulls back so the wide shot really does hold the whole transfer.
+    const cap = 0.85 * frameRadiusKm(t) / WORLD;
+    const opened = transferArc.L * smooth(span(t, ACTS[1].t0 + 6, ACTS[1].t1 - 7));
+    const trail = Math.max(cap, opened);
+    const headLen = transferArc.cum[Math.min(Math.floor(head), transferArc.cum.length - 1)];
+    const from = indexAtLength(transferArc, headLen - trail);
+    arcLine.geometry.setDrawRange(from, Math.max(2, Math.ceil(head) - from + 1));
     // De-spin at the end of the act, so the frame hands over already locked to
     // the Sun-Earth line that act 3 works in.
     A2.rotation.z = -M.thetaTransfer * f * smooth(span(t, ACTS[1].t1 - 6.5, ACTS[1].t1 - 3.8));
