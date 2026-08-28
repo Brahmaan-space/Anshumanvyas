@@ -151,12 +151,42 @@ function arcTable(pts, scale) {
   return { cum, L: cum[cum.length - 1] };
 }
 
-/** Index at an absolute arc length along the polyline. */
-function indexAtLength(tab, L) {
+/** Fractional index at an absolute arc length along the polyline. */
+function fracIndexAtLength(tab, L) {
   const target = MathUtils.clamp(L, 0, tab.L);
   let lo = 0, hi = tab.cum.length - 1;
   while (lo < hi) { const mid = (lo + hi) >> 1; if (tab.cum[mid] < target) lo = mid + 1; else hi = mid; }
-  return lo;
+  if (lo === 0) return 0;
+  const a = tab.cum[lo - 1], b = tab.cum[lo];
+  return (lo - 1) + (b > a ? (target - a) / (b - a) : 0);
+}
+
+/** Overwrite one vertex of a drawn polyline with an interpolated source point.
+ *
+ * A draw range can only start and end on whole vertices, so a moving window
+ * over a coarse polyline makes both ends jump a full sample at a time -- on the
+ * transfer arc that is 680,000 km per step, most of the frame early in the
+ * cruise, and it reads as the line juddering. Writing the two end vertices
+ * explicitly each frame pins them to exactly where they belong. The buffer is
+ * rewritten from the source data every frame, so clobbering a vertex is safe.
+ */
+function pinVertex(line, pts, scale, vertexIndex, sourceIndex) {
+  const p = at(pts, scale, sourceIndex);
+  const a = line.geometry.getAttribute('position');
+  a.setXYZ(vertexIndex, p.x, p.y, p.z);
+  a.needsUpdate = true;
+}
+
+/** Draw a window of a polyline, with both ends landing exactly where asked. */
+function drawWindow(line, pts, tab, scale, headIdx, trailLen) {
+  const headLen = tab.cum[MathUtils.clamp(Math.floor(headIdx), 0, tab.cum.length - 1)];
+  const fromF = fracIndexAtLength(tab, headLen - trailLen);
+  const from = Math.floor(fromF);
+  const to = Math.min(Math.ceil(headIdx), pts.length - 1);
+  if (to <= from) { line.geometry.setDrawRange(0, 0); return; }
+  pinVertex(line, pts, scale, from, fromF);
+  pinVertex(line, pts, scale, to, headIdx);
+  line.geometry.setDrawRange(from, to - from + 1);
 }
 
 /** Index at a given fraction of total arc length (binary search). */
@@ -387,6 +417,7 @@ A3.add(earth3, earth3wire);
 }
 
 const haloRel = DATA.halo.map((p) => [p[0] - M.xL1Km, p[1], p[2]]);
+const haloArc = arcTable(haloRel, S3);
 A3.add(polyline(haloRel, S3, SLATE, 0.2));
 const haloLine = polyline(haloRel, S3, ACCENT, 0.95);
 haloLine.geometry.setDrawRange(0, 0);
@@ -422,7 +453,7 @@ const CAPTIONS = [
   [A1_ESC0,      'Escape burn',         `${M.escapeDvMs} m/s, and Earth no longer holds it`],
   [A1_ESC0 + 1.9, 'Crossing the sphere of influence',
                   `925,000 km, ${M.escapeDays.toFixed(1)} days after the burn`],
-  [15.5,  'Heliocentric frame',                'Earth’s orbital motion is the spacecraft’s too'],
+  [15.5,  'Now measured against the Sun',      'the spacecraft carries Earth’s 29.8 km/s with it'],
   [17.6,  'Lambert transfer arc',              '110 days from the sphere of influence to L1'],
   [21.0,  'Sun, Earth, spacecraft',            'the whole transfer in one frame'],
   [22.6,  'Locking to the rotating frame',     'Earth held fixed on the Sun–Earth line'],
@@ -657,14 +688,15 @@ function update(t) {
   elClock.textContent = `T + ${missionDay(t).toFixed(1)} d`;
 
   /* ---- act 1 */
-  const a1 = t < ACTS[0].t1 ? 1 : 1 - span(t, ACTS[0].t1, ACTS[0].t1 + 1.0);
+  const a1 = 1 - span(t, ACTS[0].t1 - 0.15, ACTS[0].t1 + 0.5);
   setFade(A1, a1);
   if (a1 > 0) {
     let burn = 0;
     for (let k = 0; k < 5; k++) {
       const f = span(t, A1_W[k][0], A1_W[k][1]);
       const idx = warpedIndex(DATA.raises[k].tn, raiseArcs[k], f);
-      raiseLines[k].geometry.setDrawRange(0, Math.round(Math.max(f > 0 ? 2 : 0, idx)));
+      if (f <= 0) raiseLines[k].geometry.setDrawRange(0, 0);
+      else drawWindow(raiseLines[k], DATA.raises[k].pts, raiseArcs[k], S1, idx, raiseArcs[k].L);
       if (f > 0 && f < 1) {
         craft1.position.copy(at(DATA.raises[k].pts, S1, idx));
         if (k > 0 && f < 0.12) burn = 1 - f / 0.12;
@@ -674,7 +706,8 @@ function update(t) {
 
     const fe = span(t, A1_ESC0, A1_ESC1);
     const ie = warpedIndex(DATA.escapeTn, escapeArc, fe);
-    escLine.geometry.setDrawRange(0, Math.round(fe > 0 ? Math.max(2, ie) : 0));
+    if (fe <= 0) escLine.geometry.setDrawRange(0, 0);
+    else drawWindow(escLine, DATA.escape, escapeArc, S1, ie, escapeArc.L);
     if (fe > 0) {
       craft1.position.copy(at(DATA.escape, S1, ie));
       if (fe < 0.1) burn = Math.max(burn, 1 - fe / 0.1);
@@ -720,10 +753,15 @@ function update(t) {
     // pulls back so the wide shot really does hold the whole transfer.
     const cap = 0.85 * frameRadiusKm(t) / WORLD;
     const opened = transferArc.L * smooth(span(t, ACTS[1].t0 + 6, ACTS[1].t1 - 7));
-    const trail = Math.max(cap, opened);
-    const headLen = transferArc.cum[Math.min(Math.floor(head), transferArc.cum.length - 1)];
-    const from = indexAtLength(transferArc, headLen - trail);
-    arcLine.geometry.setDrawRange(from, Math.max(2, Math.ceil(head) - from + 1));
+    drawWindow(arcLine, DATA.transfer, transferArc, S2, head, Math.max(cap, opened));
+
+    // The arc fades in after act 1 has gone. Act 1's trail is measured against
+    // EARTH and this one against the SUN, so near the crossing they leave the
+    // craft at very different angles -- both correct, but drawn together they
+    // look like a broken path. Showing one at a time makes the change of frame
+    // the point rather than an artefact.
+    arcLine.material.opacity = arcLine.userData.base * a2 *
+      smooth(span(t, ACTS[1].t0 + 0.45, ACTS[1].t0 + 1.7));
     // De-spin at the end of the act, so the frame hands over already locked to
     // the Sun-Earth line that act 3 works in.
     A2.rotation.z = -M.thetaTransfer * f * smooth(span(t, ACTS[1].t1 - 6.5, ACTS[1].t1 - 3.8));
@@ -736,9 +774,14 @@ function update(t) {
     const arrive = span(t, ACTS[2].t0, ACTS[2].t0 + 1.6);
     const g = span(t, ACTS[2].t0 + 1.6, ACTS[2].t1);
     const laps = 2;
-    haloLine.geometry.setDrawRange(0, g <= 0 ? 0 : Math.round(Math.min(1, g * laps) * nHalo));
-    if (g <= 0) craft3.position.copy(at(tailRel, S3, arrive * (tailRel.length - 1)));
-    else craft3.position.copy(at(haloRel, S3, (g * laps * (nHalo - 1)) % (nHalo - 1)));
+    if (g <= 0) {
+      haloLine.geometry.setDrawRange(0, 0);
+      craft3.position.copy(at(tailRel, S3, arrive * (tailRel.length - 1)));
+    } else {
+      const hi = Math.min(1, g * laps) * (nHalo - 1);
+      drawWindow(haloLine, haloRel, haloArc, S3, hi, haloArc.L);
+      craft3.position.copy(at(haloRel, S3, (g * laps * (nHalo - 1)) % (nHalo - 1)));
+    }
     burn3.position.copy(craft3.position);
     flash(burn3, 1 - clamp01(Math.abs(t - (ACTS[2].t0 + 1.6)) / 0.5), a3);
   }
