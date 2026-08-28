@@ -131,6 +131,18 @@ a.row{grid-template-columns:38px minmax(0,1fr) 22px; cursor:pointer}
 .row.slot h3{color:var(--ink-3)}
 .row .yr{font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; color:var(--ink-3); float:right}
 
+/* Call to action. Only rows that are <a> get one, so the presence of a button
+   is itself the signal that a row opens a page. */
+.row .cta{display:inline-flex; align-items:center; gap:9px; margin-top:14px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-2); background:transparent; border:1px solid var(--line-2); border-radius:2px;
+  padding:8px 13px; transition:color .3s, border-color .3s, background .3s}
+.row .cta i{font-style:normal; font-size:12px; line-height:1; transition:transform .3s}
+.row.on .cta{color:var(--accent); border-color:rgba(82,214,232,.55); background:rgba(82,214,232,.08)}
+.row.on .cta i{transform:translate(2px,-2px)}
+a.row:hover .cta{color:var(--accent); border-color:rgba(82,214,232,.55); background:rgba(82,214,232,.08)}
+a.row:focus-visible .cta{color:var(--accent); border-color:var(--accent)}
+
 .focus-col{position:sticky; top:18vh; min-height:62vh; display:flex; flex-direction:column; justify-content:flex-end}
 #focus-meta{border:1px solid var(--line); border-left:2px solid var(--accent); border-radius:2px;
   padding:14px 18px; background:rgba(6,10,20,.82); backdrop-filter:blur(10px)}
@@ -265,7 +277,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding:22px var(--pad
   .nav-links a{font-size:9.5px; letter-spacing:.1em}
   .caps{grid-template-columns:minmax(0,1fr)}
   .row{grid-template-columns:30px minmax(0,1fr); gap:12px}
-  
+  .row .go{display:none}
 }
 @media (max-width:1000px), (prefers-reduced-motion: reduce){
   .hs{height:auto}
@@ -425,6 +437,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding:22px var(--pad
             <h3>Satellite launch and Sun-Earth L1 transfer <span class="yr">2024</span></h3>
             <p>MATLAB and STK models of launch, orbital transfer and insertion at the Sun-Earth L1 point, with stability analysis and multi-frame coordinate transformations validating the trajectory across mission phases.</p>
             <div class="tags"><span>MATLAB</span><span>STK</span><span>Astrodynamics</span><span>Trajectory design</span></div>
+            <span class="cta">Read the writeup <i>&#8599;</i></span>
           </div>
           <span class="go">&#8599;</span>
         </a>
@@ -444,6 +457,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding:22px var(--pad
             <h3>LiDAR room reconstruction <span class="yr">2024</span></h3>
             <p>A room rebuilt in 3D from 398 hand-collected laser measurements. RANSAC plane fitting, geometric binning and SVD flattening turned a sparse point set into a closed model, checked against a ray-traced virtual room.</p>
             <div class="tags"><span>MATLAB</span><span>3D machine vision</span><span>Point clouds</span></div>
+            <span class="cta">Read the writeup <i>&#8599;</i></span>
           </div>
           <span class="go">&#8599;</span>
         </a>

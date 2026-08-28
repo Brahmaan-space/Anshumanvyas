@@ -421,10 +421,14 @@ function setActive(i) {
   rows.forEach((r, j) => r.classList.toggle('on', j === i));
   const meta = document.getElementById('focus-meta');
   if (meta && rows[i]) {
-    meta.querySelector('.fm-id').textContent = rows[i].dataset.idx || '';
-    meta.querySelector('.fm-name').textContent = rows[i].dataset.short || '';
-    meta.querySelector('.fm-stat').textContent = rows[i].dataset.stat || '';
-    meta.querySelector('.fm-note').textContent = rows[i].dataset.note || '';
+    // Set only what the panel actually has. This used to assume every field was
+    // present and threw on .fm-note, which does not exist in the markup, on
+    // every single row hover.
+    const put = (sel, val) => { const el = meta.querySelector(sel); if (el) el.textContent = val || ''; };
+    put('.fm-id', rows[i].dataset.idx);
+    put('.fm-name', rows[i].dataset.short);
+    put('.fm-stat', rows[i].dataset.stat);
+    put('.fm-note', rows[i].dataset.note);
   }
 }
 rows.forEach((r, i) => {
