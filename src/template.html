@@ -438,14 +438,15 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding:22px var(--pad
           </div>
         </div>
 
-        <div class="row" data-idx="03 / LIDAR" data-short="Room reconstruction" data-stat="400 points / plane fit / patching">
+        <a class="row on" href="work/lidar-reconstruction/" data-idx="03 / LIDAR" data-short="Room reconstruction" data-stat="398 points / 6 planes / 0.28% error">
           <span class="ix">03</span>
           <div>
             <h3>LiDAR room reconstruction <span class="yr">2024</span></h3>
-            <p>A room rebuilt in 3D from roughly four hundred hand-collected laser measurements. Outlier filtering, plane detection and patching turned a sparse point set into a closed model.</p>
+            <p>A room rebuilt in 3D from 398 hand-collected laser measurements. RANSAC plane fitting, geometric binning and SVD flattening turned a sparse point set into a closed model, checked against a ray-traced virtual room.</p>
             <div class="tags"><span>MATLAB</span><span>3D machine vision</span><span>Point clouds</span></div>
           </div>
-        </div>
+          <span class="go">&#8599;</span>
+        </a>
 
         <!-- OPEN SLOTS: uncomment a block when its project page and writeup exist.
              Each row needs data-idx, data-short and data-stat for the focus panel,

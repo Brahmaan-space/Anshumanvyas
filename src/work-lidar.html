@@ -1,0 +1,431 @@
+<title>A room from 398 points</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+
+<style>/*__PAGECSS__*/</style>
+<!--/head-->
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
+
+<nav>
+  <a class="brand" href="../../">Anshuman Vyas<i>.</i></a>
+  <div class="nav-links">
+    <a href="../../#work">Work</a>
+    <a href="../../#research">Research</a>
+    <a href="../../#track">Path</a>
+    <a href="../../#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero shell">
+    <a class="back" href="../../#work">&larr; Selected work</a>
+    <span class="eyebrow" data-rev>03 &middot; Perception</span>
+    <h1 data-rev>A room from 398 points</h1>
+    <p class="dek" data-rev>A laser rangefinder measures one distance along one line. Aim it 398 times
+      from a fixed point and you have a cloud of coordinates with no idea which of them are the same
+      wall. This is the algorithm that works that out and rebuilds the room.</p>
+
+    <dl class="facts" data-rev>
+      <div class="fact"><dt>Instrument</dt><dd>Bosch GLM165-40<br>laser rangefinder</dd></div>
+      <div class="fact"><dt>Scan</dt><dd>398 points<br>17 azimuths &times; 22 elevations</dd></div>
+      <div class="fact"><dt>Scene</dt><dd>6.10 &times; 2.22 &times; 2.87 m</dd></div>
+      <div class="fact"><dt>Surfaces found</dt><dd>6 planes</dd></div>
+      <div class="fact"><dt>Agreement</dt><dd>0.28% mean<br>relative error</dd></div>
+      <div class="fact"><dt>Tools</dt><dd>MATLAB<br>RANSAC &middot; SVD</dd></div>
+    </dl>
+  </header>
+
+  <div class="shell doc">
+    <nav class="toc" aria-label="Sections">
+      <a href="#problem"><span>01</span> Problem</a>
+      <a href="#rig"><span>02</span> Rig</a>
+      <a href="#points"><span>03</span> Points</a>
+      <a href="#planes"><span>04</span> Planes</a>
+      <a href="#flatten"><span>05</span> Flattening</a>
+      <a href="#close"><span>06</span> Closing</a>
+      <a href="#virtual"><span>07</span> Virtual room</a>
+      <a href="#results"><span>08</span> Results</a>
+      <a href="#artifacts"><span>09</span> Artifacts</a>
+    </nav>
+
+    <main>
+      <!-- ============================================================ 01 -->
+      <section id="problem">
+        <div class="sechead" data-rev><span class="n">01</span><h2>The problem</h2></div>
+        <p class="lead" data-rev>A point cloud is an unordered list of coordinates. Nothing in it says
+          which points share a surface, where one wall ends, or where the corners are.</p>
+
+        <p data-rev>Most LiDAR work sidesteps that by knowing where the instrument is. Position and
+          attitude are tracked, every return is transformed into a global frame, and the scene assembles
+          itself. Here nothing outside the instrument is known. The rangefinder sits at the origin of its
+          own coordinate system and never moves, and the room has to be recovered from the returns
+          alone &mdash; which is the situation a spacecraft is in during rendezvous or obstacle
+          avoidance, when there is no survey of the thing it is approaching.</p>
+
+        <p data-rev>The scene was a lab: floor, ceiling, whiteboard, a run of lockers, and two walls
+          meeting at a corner, with a couple of chairs and a backpack added to see whether anything
+          smaller than a wall could be picked out.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-scene.jpg" alt="The lab scanned: whiteboard, lockers along one wall, chairs, tiled floor and drop ceiling">
+          <figcaption><b>Figure 1 &middot; The scene</b>
+            Everything the algorithm is expected to find, photographed from roughly where the
+            rangefinder stood.</figcaption>
+        </figure>
+
+        <p class="credit" data-rev>Built with a project team of four. The reconstruction algorithm and the
+          synthetic validation described on this page are mine.</p>
+      </section>
+
+      <!-- ============================================================ 02 -->
+      <section id="rig">
+        <div class="sechead" data-rev><span class="n">02</span><h2>The rig</h2></div>
+        <p data-rev>A rangefinder gives range and nothing else. Turning that into a point needs the
+          direction it was pointing, which means a mount that can be aimed and read.</p>
+
+        <p data-rev>The tool is a Bosch Blaze Pro GLM165-40, 186 g, and it measures from its own back
+          edge. Both axes of rotation were lined up with that edge, so rotating the instrument does not
+          translate the measurement origin and no offsets have to be carried through the maths. An
+          aluminium counterweight balances the moment that alignment creates. Azimuth and elevation are
+          read off two large printed protractors.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-apparatus.jpg" alt="The two-axis mount: rangefinder on a wooden cradle between two large printed protractors">
+          <figcaption><b>Figure 2 &middot; The mount</b>
+            Two-axis gimbal. Elevation is set by a screw, azimuth by rotating the base; both are read
+            against printed protractors.</figcaption>
+        </figure>
+
+        <p data-rev>Elevation was set first and held by the screw, then seventeen azimuth readings were
+          taken across it, from &minus;80&deg; to 0&deg; in 5&deg; steps. Elevation then advanced by
+          2&deg;, from &minus;18&deg; up to 24&deg;. That grid produced <strong>398 points</strong>, plus
+          24 extra aimed at the chairs and the backpack and five more measured directly with a tape for
+          validation. Angles were read by eye, so the angular error in the dataset is human rather than
+          instrumental.</p>
+      </section>
+
+      <!-- ============================================================ 03 -->
+      <section id="points">
+        <div class="sechead" data-rev><span class="n">03</span><h2>From angles to points</h2></div>
+        <p data-rev>Each reading is a range and two angles, so the cloud starts in spherical
+          coordinates and has to be converted:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">x = r\cos\phi\cos\theta, \qquad y = r\cos\phi\sin\theta, \qquad z = r\sin\phi</span>
+          <span class="cap">&theta; azimuth, &phi; elevation, both zero when the instrument lies flat.
+            No rotation or translation is needed: the rangefinder is the origin.</span>
+        </div>
+
+        <p data-rev>One correction goes in before anything else. The instrument was not set up square to
+          the room, so the walls come out running diagonally across the coordinate axes. An 8&deg; bias
+          added to every azimuth reading turns the cloud to sit square with the room. That is worth doing
+          for its own sake, and it is also what makes the binning stage in section 04 possible at
+          all &mdash; that stage assumes surfaces line up with the axes.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-raw-cloud.png" alt="Raw point cloud: rows of points forming wall, floor and ceiling shapes, with discarded points marked">
+          <figcaption><b>Figure 3 &middot; Raw cloud</b>
+            All 398 returns after conversion. Marked points were dropped before processing: ceiling
+            light fixtures and the mesh chair back, where the beam passed through instead of
+            reflecting.</figcaption>
+        </figure>
+
+        <div class="note" data-rev>
+          <span class="k">Why the far end is sparse</span>
+          <p>The scan steps by a fixed angle, so the spacing between points on a surface grows with
+            distance from the instrument. The near wall is densely covered and the far end of the room is
+            not. That single fact drives most of what the next section has to deal with.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 04 -->
+      <section id="planes">
+        <div class="sechead" data-rev><span class="n">04</span><h2>Finding the planes</h2></div>
+        <p class="lead" data-rev>Three stages, in order, each one picking up what the previous one
+          could not handle.</p>
+
+        <h3 data-rev>RANSAC</h3>
+        <p data-rev>Take three points at random, and they define a plane:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\mathbf{n} = (P_2 - P_1)\times(P_3 - P_1), \qquad ax + by + cz + d = 0</span>
+        </div>
+
+        <p data-rev>Measure every other point's perpendicular distance to it, count how many fall inside
+          a threshold, and keep the plane with the most:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\mathrm{dist}(P_i) = \frac{\lvert ax_i + by_i + cz_i + d\rvert}{\sqrt{a^2+b^2+c^2}}</span>
+        </div>
+
+        <p data-rev>The winning plane's inliers are labelled and removed, and the search runs again on
+          what is left. The inlier threshold is not a fixed number: it is one percent of the mean range in
+          the dataset, so it scales with the scan rather than needing a hand-tuned value per scene. A
+          hundred thousand candidate planes per pass, twenty-five points minimum to count as a
+          surface.</p>
+
+        <div class="note" data-rev>
+          <span class="k">Why it stops at half the points</span>
+          <p>Run RANSAC to exhaustion on this dataset and the later planes stop being walls. With the
+            far end of the room sampled sparsely, the densest remaining arrangement of points is often the
+            scan pattern itself &mdash; a fan of returns at one elevation, which is coplanar with the beam
+            and fits beautifully. The loop is therefore capped at 50% of the points. A second pass then
+            re-runs on the labelled half alone, with a ten-point minimum, to split any surface the first
+            pass merged.</p>
+        </div>
+
+        <h3 data-rev>Cartesian binning</h3>
+        <p data-rev>That leaves half the cloud unlabelled, and those points are not noise &mdash; they
+          are the sparse far end of real surfaces. They get correlated geometrically instead. Each axis is
+          histogrammed into a hundred bins; a surface perpendicular to that axis shows up as a spike,
+          because all its points share one coordinate.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-histogram.png" alt="Histogram of point positions along one axis, with two tall spikes among low scattered counts">
+          <figcaption><b>Figure 4 &middot; Binning</b>
+            Positions along one axis. The two spikes are surfaces; the low spread between them is
+            everything oblique to this axis.</figcaption>
+        </figure>
+
+        <p data-rev>Picking the spikes out needs care, because a noisy histogram has dozens of local
+          maxima. The routine finds all of them, then subtracts one count from every bin and looks again,
+          repeating until only the two strongest peaks survive. Shallow maxima drown first. A peak also
+          has to hold at least five points to count at all, which stops the method inventing a surface out
+          of scatter. Points within three bin widths of a surviving peak join that plane.</p>
+
+        <h3 data-rev>Geometric exclusion</h3>
+        <p data-rev>Binning is generous: a point can sit at the right coordinate along one axis and be
+          nowhere near the surface. So each labelled group is checked for stragglers. For every point, the
+          distance to its nearest neighbour <em class="term">within the same group</em>:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">d_{n,m} = \sqrt{(p_{n,x}-p_{m,x})^2 + (p_{n,y}-p_{m,y})^2 + (p_{n,z}-p_{m,z})^2}</span>
+        </div>
+
+        <p data-rev>A point whose nearest neighbour is further away than the group's mean plus 0.2 m is
+          not part of that surface, and is dropped. The threshold is generous on purpose: the far end of
+          every plane is genuinely sparse, and a tighter cut would delete the room's real geometry along
+          with the strays.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-segmented.png" alt="Point cloud coloured into six distinct labelled groups">
+          <figcaption><b>Figure 5 &middot; Six surfaces</b>
+            The cloud after all three stages. Colour is the plane label: floor, ceiling, two walls and
+            the two faces of the cabinet run.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 05 -->
+      <section id="flatten">
+        <div class="sechead" data-rev><span class="n">05</span><h2>Flattening</h2></div>
+        <p data-rev>Each group is now known to belong to one surface, but the points do not lie on a
+          plane. Read an angle a fraction of a degree wrong and the point lands off the wall; do that four
+          hundred times and the wall comes out corrugated.</p>
+
+        <p data-rev>The fix is a singular value decomposition. Mean-centre the group, decompose it, and
+          the three singular values measure how much the point set extends along each of its own principal
+          directions. For something that is meant to be flat, the third is the thickness. Set it to zero,
+          rebuild, and add the mean back:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">[U, S, V] = \mathrm{svd}(P - \bar{P}), \qquad S_{33} := 0, \qquad P' = USV^{\mathsf{T}} + \bar{P}</span>
+          <span class="cap">Every point collapses onto the best-fit plane through the group, along the
+            direction in which the group was thinnest to begin with.</span>
+        </div>
+
+        <div class="fig2" data-rev>
+          <figure>
+            <img src="../figures/lidar-pre-pca.png" alt="Edge-on view of one wall's points, scattered in a band">
+            <figcaption><b>Before</b> One wall edge-on. The spread is measurement error.</figcaption>
+          </figure>
+          <figure>
+            <img src="../figures/lidar-post-pca.png" alt="The same points collapsed onto a single line">
+            <figcaption><b>After</b> The same points on the fitted plane.</figcaption>
+          </figure>
+        </div>
+
+        <p data-rev>The fitted wall is slightly tilted, and that tilt is left in. Squaring it up would mean
+          assuming the room has right angles, and the point of the exercise is to see what the point cloud
+          alone can say.</p>
+      </section>
+
+      <!-- ============================================================ 06 -->
+      <section id="close">
+        <div class="sechead" data-rev><span class="n">06</span><h2>Closing the room</h2></div>
+        <p data-rev>Six flat surfaces still are not a room. Nobody aimed the laser exactly into a corner,
+          so every plane stops short of its own edges and the model has holes where the walls should meet.
+          The edges have to be computed rather than measured.</p>
+
+        <p data-rev>Two planes that are not parallel meet along a line, whose direction is the cross
+          product of their normals:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\mathbf{N}_l = \mathbf{n}_1 \times \mathbf{n}_2</span>
+          <span class="cap">Parallel planes give a zero cross product and are skipped.</span>
+        </div>
+
+        <p data-rev>That line runs to infinity, so it gets cut where two further planes cross it. Given a
+          bounding plane with normal n<sub>p</sub> through a point P<sub>p</sub>, and the line through
+          P<sub>l</sub>:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">d_3 = \frac{(\mathbf{P}_p - \mathbf{P}_l)\cdot \mathbf{n}_p}{\mathbf{N}_l \cdot \mathbf{n}_p}, \qquad \mathbf{P}_i = \mathbf{P}_l + \mathbf{N}_l\, d_3</span>
+          <span class="cap">P&#8305; is a corner of the room. Where no bounding plane exists, the cloud's
+            furthest point in that direction is used instead.</span>
+        </div>
+
+        <p data-rev>Each corner is added back into both intersecting planes as an artificial point, and
+          the surfaces are re-meshed. The walls now reach their edges and the room closes.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-extended.png" alt="The finished reconstruction: six coloured meshed planes forming a closed room">
+          <figcaption><b>Figure 6 &middot; Reconstruction</b>
+            The scene rebuilt from the point cloud. Floor, ceiling, back wall, side wall and both
+            faces of the cabinet run, each extended to meet its neighbours.</figcaption>
+        </figure>
+
+        <div class="note" data-rev>
+          <span class="k">One surface goes too far</span>
+          <p>The cabinet faces are extended up to the ceiling, and the real cabinet stops well short of
+            it. There were no returns from the top of the cabinet &mdash; the instrument was below it and
+            could not see the surface &mdash; so the extension had no nearer plane to stop against. A
+            second vantage point would close that gap; a bounding box would hide it.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 07 -->
+      <section id="virtual">
+        <div class="sechead" data-rev><span class="n">07</span><h2>A room I made up</h2></div>
+        <p class="lead" data-rev>Judging a reconstruction against a real room is hard, because the truth
+          is a tape measure and a handful of points. A simulated room has no such limit: every dimension
+          is known exactly.</p>
+
+        <p data-rev>So the second half of the work is a virtual room &mdash; five planes as patch
+          objects, dimensions set by variables, instrument placed at the origin. A simulated scan casts a
+          ray for a given azimuth and elevation, converts it to a unit direction, and tests it against each
+          plane in turn. A ray parallel to a plane gives no intersection:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">\vec{l}\cdot\vec{n} = 0 \;\Rightarrow\; \text{no intersection}, \qquad
+          \vec{c} = \vec{p} + \frac{-(A p_i + B p_j + C p_k + D)}{\vec{l}\cdot\vec{n}}\,\vec{l}</span>
+          <span class="cap">Intersections outside the patch's own bounds are rejected, so the ray
+            continues to the next candidate plane.</span>
+        </div>
+
+        <p data-rev>The hit point converts back to a range, azimuth and elevation, which is exactly the
+          form the real instrument produces. Gaussian error is then added on top so the synthetic scan
+          resembles a measured one:</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <thead><tr><th>Measure</th><th>Injected error</th></tr></thead>
+            <tbody>
+              <tr><td>Range</td><td>0.001 m</td></tr>
+              <tr><td>Azimuth</td><td>0.1&deg;</td></tr>
+              <tr><td>Elevation</td><td>0.1&deg;</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure data-rev>
+          <img src="../figures/lidar-virtual-room.png" alt="A cube-shaped virtual room with rays cast from the centre onto its five walls">
+          <figcaption><b>Figure 7 &middot; Simulated scan</b>
+            A 10 m room with rays traced from the instrument at the origin. Each ray's landing point
+            becomes one synthetic measurement.</figcaption>
+        </figure>
+
+        <p data-rev>Feeding that through the pipeline produced the most useful result of the project.
+          RANSAC alone segmented the synthetic room completely: the binning and geometric exclusion stages
+          were never invoked, because with perfectly regular scan spacing there is nothing left over for
+          them to do. Those two stages exist because of how the real scan was collected, not because the
+          geometry demands them.</p>
+
+        <figure data-rev>
+          <img src="../figures/lidar-virtual-mesh.png" alt="The meshed reconstruction of the virtual room, walls and floor visible">
+          <figcaption><b>Figure 8 &middot; Synthetic reconstruction</b>
+            The virtual room after segmentation, flattening and meshing.</figcaption>
+        </figure>
+
+        <p data-rev>It also exposed something the real data had been hiding. The reconstructed synthetic
+          walls lean inward &mdash; by up to 2&deg;, which is 5 cm of error at the floor and ceiling and as
+          much as 30 cm at mid-wall. Rerun the simulation with the error injection switched off and the
+          lean disappears entirely, which points at the error rather than the algorithm. The same effect is
+          present in the measured reconstruction at 0.56&deg;, small enough that it would have been
+          written off as noise if the simulated room had not shown it clearly first.</p>
+      </section>
+
+      <!-- ============================================================ 08 -->
+      <section id="results">
+        <div class="sechead" data-rev><span class="n">08</span><h2>How close it got</h2></div>
+        <p data-rev>Five points in the scene were measured directly with a tape from the instrument's
+          back edge. Those are treated as truth, and both the rangefinder's own reading and the
+          reconstructed surface are compared against them.</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <thead><tr><th>Point</th><th>Tape</th><th>Rangefinder</th><th>Reconstruction</th></tr></thead>
+            <tbody>
+              <tr><td>Whiteboard</td><td>2.108 m</td><td>2.107 m</td><td>2.110 m</td></tr>
+              <tr><td>Back wall</td><td>6.160 m</td><td>6.159 m</td><td>6.130 m</td></tr>
+              <tr><td>Cabinet</td><td>2.718 m</td><td>2.723 m</td><td>&mdash;</td></tr>
+              <tr><td>Sink</td><td>0.584 m</td><td>0.598 m</td><td>&mdash;</td></tr>
+              <tr><td>Ceiling</td><td>2.159 m</td><td>2.233 m</td><td>&mdash;</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>The rangefinder tracks the tape to <strong>0.019 m</strong> on average, or 1.21% in
+          relative terms &mdash; and most of that is the ceiling reading, taken at a steep angle where the
+          beam strikes the surface obliquely. The two points that can be compared against the
+          reconstruction agree to <strong>0.016 m</strong>, or <strong>0.28%</strong>, across a scene
+          roughly 6.10 m deep.</p>
+
+        <p data-rev>Six surfaces were recovered from the room: floor, ceiling, back wall, side wall, and
+          both faces of the cabinet run. The chairs and the backpack were not. A chair leg subtends almost
+          nothing at six metres, and the scan's angular step never lands enough returns on one to
+          constitute a surface &mdash; picking out objects at that scale needs a denser scan or a
+          different instrument, not a different algorithm.</p>
+      </section>
+
+      <!-- ============================================================ 09 -->
+      <section id="artifacts">
+        <div class="sechead" data-rev><span class="n">09</span><h2>Artifacts</h2></div>
+        <div class="arts" data-rev>
+          <div class="art">
+            <span class="k">Code</span>
+            <span class="t">MATLAB</span>
+            <span class="d">Segmentation, PCA, surface extension, virtual room</span>
+          </div>
+          <div class="art">
+            <span class="k">Dataset</span>
+            <span class="t">398 points</span>
+            <span class="d">Range, azimuth, elevation</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <span><a href="../../">Anshuman Vyas</a> &middot; Ottawa, Canada</span>
+    <span>&copy; 2026 Anshuman Vyas &middot; All rights reserved</span>
+  </footer>
+</div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script>
+  window.addEventListener('load', function () {
+    if (!window.katex) return;
+    document.querySelectorAll('.eq .tex').forEach(function (el) {
+      try {
+        katex.render(el.textContent, el, { displayMode: true, throwOnError: false });
+      } catch (e) { /* leave the source visible rather than blanking the equation */ }
+    });
+  });
+</script>
+<script>/*__BUNDLE__*/</script>

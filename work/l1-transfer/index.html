@@ -37,7 +37,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
 
-<style>
+<style>/* Shared stylesheet for interior project pages.
+   build.mjs inlines this file into each page at its PAGECSS marker, so the two
+   work pages cannot drift apart. Landing-page CSS lives in src/template.html.
+   Do not write that marker token inside a comment here: CSS comments do not
+   nest, and it would terminate this one early and eat the :root block. */
+
 :root{
   --void:#04060D; --panel:#080D1A; --panel-2:#0E1626; --line:#18243C; --line-2:#223252;
   --ink:#E8EDF7; --ink-2:#93A2BE; --ink-3:#5C6B88;
@@ -100,7 +105,10 @@ h1{font-family:var(--display); font-weight:700; font-size:clamp(38px,7vw,86px); 
 /* ------------------------------------------------------------------ body */
 .doc{display:grid; grid-template-columns:180px minmax(0,1fr); gap:clamp(30px,5vw,70px);
   align-items:start; padding-bottom:60px}
-.toc{position:sticky; top:96px; display:flex; flex-direction:column; gap:1px}
+.toc{position:sticky; top:96px; display:flex; flex-direction:column; gap:1px;
+  /* .toc is a <nav>, so it would otherwise inherit align-items:center and
+     justify-content:space-between from the fixed header rule above. */
+  align-items:stretch; justify-content:flex-start}
 .toc a{display:flex; gap:11px; align-items:baseline; white-space:nowrap; font-family:var(--mono); font-size:10.5px;
   letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); padding:6px 0; transition:color .3s}
 .toc a span{opacity:.55}
@@ -193,6 +201,17 @@ footer a:hover{color:var(--accent)}
   html{scroll-behavior:auto}
   [data-rev]{opacity:1; transform:none; transition:none}
 }
+
+/* ------------------------------------------------- side-by-side figure pair */
+.fig2{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px;
+  max-width:var(--col); margin:30px 0}
+.fig2 figure{margin:0}
+.fig2 figcaption{letter-spacing:.04em}
+.fig2 figcaption b{display:inline; margin:0 6px 0 0}
+
+/* ------------------------------------------------------ contribution credit */
+.credit{font-family:var(--mono); font-size:11px; line-height:1.8; letter-spacing:.04em;
+  color:var(--ink-3); border-left:2px solid var(--line-2); padding-left:14px; margin-top:26px}
 </style>
 </head>
 <body>

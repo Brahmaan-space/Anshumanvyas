@@ -44,6 +44,19 @@ const PAGES = [
       'a Lambert arc, and a halo found in the circular restricted three-body problem.',
     image: 'og.png',
     canonical: '/work/l1-transfer/'
+  },
+  {
+    src: 'src/work-lidar.html',
+    entry: 'src/page.js',
+    out: 'work/lidar-reconstruction/index.html',
+    base: '../../',
+    title: 'A room from 398 points | Anshuman Vyas',
+    description:
+      'Reconstructing a room in 3D from 398 laser rangefinder returns: RANSAC plane fitting, ' +
+      'Cartesian binning, nearest-neighbour exclusion, SVD flattening and surface extension, ' +
+      'validated against a ray-traced virtual room.',
+    image: 'og.png',
+    canonical: '/work/lidar-reconstruction/'
   }
 ];
 
@@ -59,6 +72,11 @@ const MARK = '<!--/head-->';
 // inside it and silently corrupt the code. That produced a blank page once already.
 const inject = (s, js) => s.replace('/*__BUNDLE__*/', () => js);
 
+// Interior project pages share one stylesheet so they cannot drift apart.
+// Same function-replacer rule applies: CSS can contain $ too.
+const PAGE_CSS = readFileSync('src/page.css', 'utf8');
+const injectCss = (s) => s.replace('/*__PAGECSS__*/', () => PAGE_CSS);
+
 for (const page of PAGES) {
   const bundleFile = `bundle.${page.out.replace(/[\/.]/g, '_')}.js`;
   execSync(
@@ -71,7 +89,9 @@ for (const page of PAGES) {
 
   if (!tpl.includes(MARK)) throw new Error(`${page.src} is missing the ${MARK} marker`);
   const [rawHead, body] = tpl.split(MARK);
-  const head = rawHead.replace(/<title>[\s\S]*?<\/title>/, `<title>${page.title}</title>`);
+  const head = injectCss(
+    rawHead.replace(/<title>[\s\S]*?<\/title>/, `<title>${page.title}</title>`)
+  );
 
   const b = page.base;
   const meta = `<meta charset="utf-8">
