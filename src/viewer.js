@@ -834,7 +834,24 @@ btn.addEventListener('click', () => {
   if (time >= DUR - 0.01) { seek(0); setPlaying(true); return; }
   setPlaying(!playing);
 });
-chapEls.forEach((c, i) => c.addEventListener('click', () => { seek(ACTS[i].t0 + 0.02); setPlaying(true); }));
+/* --------------------------------------------------- deep links to chapters */
+// viewer/#halo opens on that act. The writeup links straight to the part it is
+// discussing, and a chapter can be shared on its own.
+function chapterFromHash() {
+  return ACTS.findIndex((a) => a.id === (location.hash || '').replace('#', ''));
+}
+
+chapEls.forEach((c, i) => c.addEventListener('click', () => {
+  seek(ACTS[i].t0 + 0.02);
+  setPlaying(true);
+  // replaceState, not a new entry: chapter buttons should not fill the back button.
+  try { history.replaceState(null, '', '#' + ACTS[i].id); } catch (e) { /* file:// */ }
+}));
+
+window.addEventListener('hashchange', () => {
+  const i = chapterFromHash();
+  if (i >= 0) { seek(ACTS[i].t0 + 0.02); setPlaying(true); }
+});
 
 function scrubFrom(e) {
   const r = bar.getBoundingClientRect();
@@ -887,6 +904,9 @@ update(0);
 paint();
 setPlaying(false);
 requestAnimationFrame((n) => { last = n; frame(n); });
+
+const startChapter = chapterFromHash();
+if (startChapter > 0) seek(ACTS[startChapter].t0 + 0.02);
 
 if (reduce) {
   seek(ACTS[2].t0 + 8);

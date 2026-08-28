@@ -39,6 +39,17 @@
     </dl>
   </header>
 
+  <section class="shell lede" aria-label="Mission viewer">
+    <figure class="viewer wide">
+      <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
+      <figcaption><b>Interactive &middot; the whole mission in 44 seconds</b>
+        Every path here is computed, not drawn: the parking ellipse and its four raises, the escape
+        run out to the sphere of influence, the Lambert arc, and the corrected halo. The sections
+        below are how each one was worked out.
+        <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
+    </figure>
+  </section>
+
   <div class="shell doc">
     <nav class="toc" aria-label="Sections">
       <a href="#mission"><span>01</span> Mission</a>
@@ -411,13 +422,9 @@
         <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for: continuously cancelling
           a drift the orbit would otherwise follow all the way out.</p>
 
-        <figure class="viewer wide" data-rev>
-          <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
-          <figcaption><b>Interactive &middot; the whole mission</b>
-            Every path here is the computed one: the parking ellipse and its four raises, the escape
-            run out to the sphere of influence, the Lambert arc, and the corrected halo.
-            <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
-        </figure>
+        <p class="seealso" data-rev>
+          <a href="viewer/#halo">Replay the insertion on its own &#8599;</a>
+        </p>
       </section>
 
       <div class="pageend" data-rev>

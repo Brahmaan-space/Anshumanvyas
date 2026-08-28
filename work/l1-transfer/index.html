@@ -85,7 +85,10 @@ nav .brand i{font-style:normal; color:var(--accent)}
 [data-rev].in{opacity:1; transform:none}
 
 /* ------------------------------------------------------------------ hero */
-header.hero{padding:clamp(110px,17vh,190px) 0 clamp(40px,6vh,70px)}
+/* Element+class beats .shell, so this rule has to restate the horizontal
+   padding or the hero loses it. Invisible above 1240px, where .shell's auto
+   margin happens to supply a gutter; flush to the window edge at or below it. */
+header.hero{padding:clamp(88px,12vh,140px) var(--pad) clamp(34px,5vh,56px)}
 .back{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-3); display:inline-flex; gap:8px; margin-bottom:34px; transition:color .3s}
 .back:hover{color:var(--accent)}
@@ -168,7 +171,13 @@ tr.burn td{color:var(--ink)}
 .note p{margin:0; font-size:16px}
 
 /* ----------------------------------------------------------- embedded viewer */
-.viewer{margin:34px 0 0}
+.lede{margin:6px 0 clamp(40px,6vh,64px)}
+.viewer{margin:0}
+.doc .viewer{margin:34px 0 0}
+
+.seealso{font-family:var(--mono); font-size:11px; letter-spacing:.06em; margin-top:26px}
+.seealso a{color:var(--accent)}
+.seealso a:hover{text-decoration:underline}
 .viewer iframe{display:block; width:100%; aspect-ratio:16/9; min-height:340px;
   border:1px solid var(--line); border-radius:4px; background:var(--void)}
 .viewer .pop{color:var(--accent); white-space:nowrap}
@@ -255,6 +264,17 @@ footer a:hover{color:var(--accent)}
       <div class="fact"><dt>Tools</dt><dd>MATLAB<br>CR3BP &middot; Lambert</dd></div>
     </dl>
   </header>
+
+  <section class="shell lede" aria-label="Mission viewer">
+    <figure class="viewer wide">
+      <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
+      <figcaption><b>Interactive &middot; the whole mission in 44 seconds</b>
+        Every path here is computed, not drawn: the parking ellipse and its four raises, the escape
+        run out to the sphere of influence, the Lambert arc, and the corrected halo. The sections
+        below are how each one was worked out.
+        <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
+    </figure>
+  </section>
 
   <div class="shell doc">
     <nav class="toc" aria-label="Sections">
@@ -628,13 +648,9 @@ footer a:hover{color:var(--accent)}
         <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for: continuously cancelling
           a drift the orbit would otherwise follow all the way out.</p>
 
-        <figure class="viewer wide" data-rev>
-          <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
-          <figcaption><b>Interactive &middot; the whole mission</b>
-            Every path here is the computed one: the parking ellipse and its four raises, the escape
-            run out to the sphere of influence, the Lambert arc, and the corrected halo.
-            <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
-        </figure>
+        <p class="seealso" data-rev>
+          <a href="viewer/#halo">Replay the insertion on its own &#8599;</a>
+        </p>
       </section>
 
       <div class="pageend" data-rev>
