@@ -128,12 +128,13 @@ tr.burn td{color:var(--ink)}
   color:var(--amber); display:block; margin-bottom:9px}
 .note p{margin:0; font-size:16px}
 
-/* ------------------------------------------------------------- viewer slot */
-.viewer{margin:34px 0 0; border:1px solid var(--line); border-radius:4px; background:var(--panel-2);
-  aspect-ratio:16/9; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:12px; text-align:center; padding:30px}
-.viewer .k{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent)}
-.viewer p{max-width:44ch; margin:0; font-size:15px; color:var(--ink-3)}
+/* ----------------------------------------------------------- embedded viewer */
+.viewer{margin:34px 0 0}
+.viewer iframe{display:block; width:100%; aspect-ratio:16/9; min-height:340px;
+  border:1px solid var(--line); border-radius:4px; background:var(--void)}
+.viewer .pop{color:var(--accent); white-space:nowrap}
+.viewer .pop:hover{text-decoration:underline}
+@media (max-width:700px){ .viewer iframe{aspect-ratio:4/3; min-height:300px} }
 
 /* --------------------------------------------------------- end-of-page nav */
 .pageend{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;

@@ -411,11 +411,13 @@
         <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for: continuously cancelling
           a drift the orbit would otherwise follow all the way out.</p>
 
-        <div class="viewer" data-rev>
-          <span class="k">Interactive &middot; in progress</span>
-          <p>The full mission viewer goes here: parking orbit and slingshot, the coast to L1, and the
-            converged halo orbit, in one continuous 3D scene you can scrub through.</p>
-        </div>
+        <figure class="viewer wide" data-rev>
+          <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
+          <figcaption><b>Interactive &middot; the whole mission</b>
+            Every path here is the computed one: the parking ellipse and its four raises, the escape
+            run out to the sphere of influence, the Lambert arc, and the corrected halo.
+            <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
+        </figure>
       </section>
 
       <div class="pageend" data-rev>

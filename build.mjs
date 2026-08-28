@@ -57,6 +57,18 @@ const PAGES = [
       'validated against a ray-traced virtual room.',
     image: 'og.png',
     canonical: '/work/lidar-reconstruction/'
+  },
+  {
+    src: 'src/viewer-l1.html',
+    entry: 'src/viewer.js',
+    out: 'work/l1-transfer/viewer/index.html',
+    base: '../../../',
+    title: 'Mission viewer | Slingshot to L1',
+    description:
+      'Interactive three-act view of the transfer to a halo orbit about Sun-Earth L1: ' +
+      'the perigee raises and escape burn, the heliocentric cruise, and halo insertion.',
+    image: 'og.png',
+    canonical: '/work/l1-transfer/viewer/'
   }
 ];
 

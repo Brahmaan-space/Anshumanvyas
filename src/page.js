@@ -88,3 +88,39 @@ if ('IntersectionObserver' in window) {
   window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(place); }, { passive: true });
   place();
 })();
+
+/* ------------------------------------------- embedded mission viewer, if any */
+// An IntersectionObserver inside an iframe only sees the iframe's own viewport,
+// so the viewer cannot tell whether it is on screen. The parent watches for it
+// and posts the answer in.
+(function viewerVisibility() {
+  const frame = document.getElementById('mission-viewer');
+  if (!frame) return;
+
+  let sent = null;
+  function tell(visible) {
+    if (visible === sent) return;
+    sent = visible;
+    try {
+      frame.contentWindow.postMessage({ type: 'viewer-visibility', visible: visible }, '*');
+    } catch (e) { /* not loaded yet; the load handler below retries */ }
+  }
+
+  function onScreen() {
+    const r = frame.getBoundingClientRect();
+    return r.bottom > window.innerHeight * 0.15 && r.top < window.innerHeight * 0.85;
+  }
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(
+      (es) => es.forEach((e) => tell(e.isIntersecting)),
+      { threshold: 0.3 }
+    ).observe(frame);
+  } else {
+    window.addEventListener('scroll', () => tell(onScreen()), { passive: true });
+  }
+
+  // Lazy-loaded, so the first message can land before there is anything to
+  // receive it. Repeat the current state once the document is actually there.
+  frame.addEventListener('load', () => { sent = null; tell(onScreen()); });
+})();
