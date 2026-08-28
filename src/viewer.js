@@ -343,6 +343,7 @@ arcLine.geometry.setDrawRange(0, 0);
 A2.add(arcLine);
 
 const earth2 = dot(0x6ba8e8, 0.022);
+earth2.position.set(M.earthRotKm / S2, 0, 0);
 const craft2 = dot(PALE, 0.014);
 // L1 itself, so the dive at the end of the act closes on something rather than
 // on empty space. It rides inside A2, so the de-spin carries it correctly.
@@ -570,6 +571,7 @@ const camPos = new Vector3();
 const camTgt = new Vector3();
 const tmpA = new Vector3();
 const tmpB = new Vector3();
+const tmpE = new Vector3();
 const tmpV = new Vector3();
 const tmpW = new Vector3();
 const ORIGIN = new Vector3(0, 0, 0);
@@ -585,7 +587,7 @@ function placeCamera(t) {
        [A1_ESC0 - 0.2, RB[4].c], [T_HANDOVER_1, new Vector3(0, 0, 0)]],
       t, camTgt
     );
-    camTgt.add(A1.position);   // act 1's geometry is offset to Earth's place
+    camTgt.add(A1.position);   // act 1 rides with Earth; read it, do not assume
   } else if (t < T_HANDOVER_2) {
     scale = S2;
     // Earth, then the Sun, then the spacecraft. Diving toward Earth instead
@@ -668,13 +670,27 @@ function update(t) {
   const a2 = Math.min(span(t, ACTS[0].t1 - 0.7, ACTS[0].t1 + 0.5),
                       1 - span(t, ACTS[1].t1 - 0.3, ACTS[1].t1 + 0.8));
   setFade(A2, a2);
+  {
+    // Earth and L1 are placed every frame, whether or not act 2 is being drawn,
+    // because act 1 is pinned to Earth and needs to know where it is.
+    const f = span(t, ACTS[1].t0, ACTS[1].t1);
+    const th = f * M.thetaTransfer;
+    earth2.position.set(Math.cos(th) * M.earthRotKm / S2, Math.sin(th) * M.earthRotKm / S2, 0);
+    l1mark2.position.set(Math.cos(th) * M.xL1Km / S2, Math.sin(th) * M.xL1Km / S2, 0);
+
+    // Act 1's geometry is Earth-relative, so it has to ride with Earth. Left at
+    // a fixed heliocentric position it gets abandoned the moment act 2 starts
+    // advancing: Earth covers 10 million km during the half-second cross-fade
+    // and the frame is only 1 million km across, so everything from act 1
+    // appears to shoot sideways out of shot.
+    earth2.getWorldPosition(tmpE);
+    world.worldToLocal(tmpE);
+    A1.position.copy(tmpE);
+  }
   if (a2 > 0) {
     const f = span(t, ACTS[1].t0, ACTS[1].t1);
     arcLine.geometry.setDrawRange(0, Math.round(f * ARC_STOP) + 1);
     craft2.position.copy(at(DATA.transfer, S2, f * ARC_STOP));
-    const th = f * M.thetaTransfer;
-    earth2.position.set(Math.cos(th) * M.earthRotKm / S2, Math.sin(th) * M.earthRotKm / S2, 0);
-    l1mark2.position.set(Math.cos(th) * M.xL1Km / S2, Math.sin(th) * M.xL1Km / S2, 0);
     // De-spin at the end of the act, so the frame hands over already locked to
     // the Sun-Earth line that act 3 works in.
     A2.rotation.z = -M.thetaTransfer * f * smooth(span(t, ACTS[1].t1 - 6.5, ACTS[1].t1 - 3.8));
@@ -692,6 +708,17 @@ function update(t) {
     else craft3.position.copy(at(haloRel, S3, (g * laps * (nHalo - 1)) % (nHalo - 1)));
     burn3.position.copy(craft3.position);
     flash(burn3, 1 - clamp01(Math.abs(t - (ACTS[2].t0 + 1.6)) / 0.5), a3);
+  }
+
+  // Exactly one spacecraft on screen. Act 1's craft and act 2's differ by the
+  // 25,786 km between the two source AU values, which is small but enough to
+  // read as a second craft while both acts are drawn. Hand over at the midpoint
+  // of the fade, where the two are effectively in the same place.
+  if (a1 > 0 && a2 > 0) {
+    const useSecond = a1 < 0.5;
+    craft1.material.opacity = useSecond ? 0 : craft1.userData.base * a1;
+    burn1.material.opacity = useSecond ? 0 : burn1.material.opacity;
+    craft2.material.opacity = useSecond ? craft2.userData.base * a2 : 0;
   }
 
   placeCamera(t);
