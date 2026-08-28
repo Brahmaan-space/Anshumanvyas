@@ -171,7 +171,10 @@ tr.burn td{color:var(--ink)}
 .note p{margin:0; font-size:16px}
 
 /* ----------------------------------------------------------- embedded viewer */
-.lede{margin:6px 0 clamp(40px,6vh,64px)}
+/* margin-top/bottom only. A `margin` shorthand here would set the horizontal
+   margins to 0 and kill .shell's `margin:0 auto`, so the viewer would sit hard
+   left while the rest of the page centred. */
+.lede{margin-top:6px; margin-bottom:clamp(40px,6vh,64px)}
 .viewer{margin:0}
 .doc .viewer{margin:34px 0 0}
 
@@ -252,9 +255,9 @@ footer a:hover{color:var(--accent)}
     <a class="back" href="../../#work">&larr; Selected work</a>
     <span class="eyebrow" data-rev>01 &middot; Trajectory</span>
     <h1 data-rev>Slingshot to L1</h1>
-    <p class="dek" data-rev>Modelling the full transfer from a low Earth parking orbit to a halo orbit
-      about the Sun&ndash;Earth L1 point: four burns at perigee, a fifth that leaves Earth behind,
-      and a three-body problem at the far end.</p>
+    <p class="dek" data-rev>Modelling the full transfer from a low Earth parking orbit to a halo orbit about the Sun-Earth L1
+      point. Four burns at perigee raise the orbit, a fifth takes the spacecraft out of
+      Earth&rsquo;s sphere of influence, and the arrival is solved in the three-body problem.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Subject</dt><dd>Aditya-L1<br>ISRO solar observatory</dd></div>
@@ -269,9 +272,9 @@ footer a:hover{color:var(--accent)}
     <figure class="viewer wide">
       <iframe id="mission-viewer" src="viewer/" loading="lazy" title="Mission viewer: parking orbit to L1 halo"></iframe>
       <figcaption><b>Interactive &middot; the whole mission in 44 seconds</b>
-        Every path here is computed, not drawn: the parking ellipse and its four raises, the escape
-        run out to the sphere of influence, the Lambert arc, and the corrected halo. The sections
-        below are how each one was worked out.
+        Every path in the viewer is computed from the models in this write-up: the parking ellipse and its
+        four raises, the escape out to the sphere of influence, the Lambert arc, and the corrected
+        halo. The sections below cover how each one was worked out.
         <a class="pop" href="viewer/">Open full screen &#8599;</a></figcaption>
     </figure>
   </section>
@@ -280,7 +283,7 @@ footer a:hover{color:var(--accent)}
     <nav class="toc" aria-label="Sections">
       <a href="#mission"><span>01</span> Mission</a>
       <a href="#parking"><span>02</span> Parking</a>
-      <a href="#raises"><span>03</span> Burns</a>
+      <a href="#raises"><span>03</span> Raises</a>
       <a href="#escape"><span>04</span> Escape</a>
       <a href="#lagrange"><span>05</span> L1</a>
       <a href="#halo"><span>06</span> Halo</a>
@@ -295,10 +298,10 @@ footer a:hover{color:var(--accent)}
         <p class="lead" data-rev>Aditya-L1 is India's first dedicated solar observatory. It carries seven
           payloads: four looking directly at the Sun, three measuring particles and fields in situ.
           It launched on 2 September 2023.</p>
-        <p data-rev>The reason it goes to L1 rather than to Earth orbit is uninterrupted view. A spacecraft
-          near the first Sun&ndash;Earth Lagrange point sees the Sun continuously, with no occultation by
-          the Earth, which makes it possible to watch coronal mass ejections and flare activity as they
-          develop rather than in fragments.</p>
+        <p data-rev>L1 is used instead of an Earth orbit because the view of the Sun is uninterrupted. A spacecraft
+          near the first Sun-Earth Lagrange point sees the Sun continuously, with no occultation
+          by the Earth, so coronal mass ejections and flare activity can be observed as they
+          develop.</p>
         <p data-rev>This project reproduces that trajectory from the ground up: establish the parking orbit,
           raise it in stages, escape Earth's sphere of influence, find L1 numerically, pick a halo orbit
           around it, and patch the two halves of the journey together.</p>
@@ -333,13 +336,13 @@ footer a:hover{color:var(--accent)}
 
       <!-- ============================================================ 03 -->
       <section id="raises">
-        <div class="sechead" data-rev><span class="n">03</span><h2>Four burns at perigee</h2></div>
+        <div class="sechead" data-rev><span class="n">03</span><h2>Raising the orbit</h2></div>
         <p data-rev>Indian launch vehicles cannot give a spacecraft escape velocity directly, so the orbit
-          is built up instead. This is the slingshot technique, and it works because of the
-          <strong>Oberth effect</strong>: the most efficient place to change velocity is the point of an
-          orbit where you are already moving fastest, which for an ellipse is perigee.</p>
+          is built up instead. This is the slingshot technique, and it works because of the <strong>Oberth effect</strong>, which
+          states that the most efficient place for a spacecraft to change velocity is at the
+          lowest point of its orbit. For an elliptical orbit that is the perigee.</p>
 
-        <p data-rev>So the same burn point is used four times over, each one raising apogee further:</p>
+        <p data-rev>The same burn point is used four times, each burn raising the apogee further:</p>
 
         <div class="tw" data-rev>
           <table>
@@ -370,14 +373,14 @@ footer a:hover{color:var(--accent)}
 
       <!-- ============================================================ 04 -->
       <section id="escape">
-        <div class="sechead" data-rev><span class="n">04</span><h2>Leaving Earth behind</h2></div>
+        <div class="sechead" data-rev><span class="n">04</span><h2>Escaping Earth&rsquo;s sphere of influence</h2></div>
         <p data-rev>To escape a planet's gravity the spacecraft has to be on a hyperbolic trajectory
           relative to it, arriving at the edge of the sphere of influence with hyperbolic excess velocity
           greater than zero:</p>
 
         <div class="eq" data-rev>
           <span class="tex">v_\infty = \sqrt{\frac{\mu_{\odot}}{R_1}}\left(\sqrt{\frac{2R_2}{R_1 + R_2}} - 1\right)</span>
-          <span class="cap">R&#8321; is the Sun&ndash;Earth distance, R&#8322; the Sun&ndash;L1 distance,
+          <span class="cap">R&#8321; is the Sun-Earth distance, R&#8322; the Sun-L1 distance,
             &mu;<sub>&#9737;</sub> the Sun's gravitational parameter.</span>
         </div>
 
@@ -399,7 +402,7 @@ footer a:hover{color:var(--accent)}
 
       <!-- ============================================================ 05 -->
       <section id="lagrange">
-        <div class="sechead" data-rev><span class="n">05</span><h2>Finding L1</h2></div>
+        <div class="sechead" data-rev><span class="n">05</span><h2>Locating L1</h2></div>
         <p data-rev>Lagrange points are the positions where the gravitational pull of two large bodies
           supplies exactly the centripetal force a small third body needs to move with them. There are
           five. The three collinear ones lie on the line joining the two masses and all three are unstable.
@@ -418,9 +421,10 @@ footer a:hover{color:var(--accent)}
             to the two primaries.</span>
         </div>
 
-        <p data-rev>In this form the equations depend only on the mass ratio <em class="term">&mu;</em> &mdash;
-          not on the two masses individually, the rotation rate of the frame, or the separation between the
-          primaries. The same equations therefore describe Sun&ndash;Earth and Earth&ndash;Moon alike.</p>
+        <p data-rev>In this form the equations depend only on the mass ratio <em class="term">&mu;</em>. They do not
+          depend on the two masses individually, on the rotation rate of the frame, or on the
+          separation between the primaries. The same equations therefore describe the Sun-Earth
+          and Earth-Moon systems.</p>
 
         <p data-rev>At an equilibrium point every velocity and acceleration term vanishes. Setting
           <em class="term">y*</em> = 0 for the collinear case leaves a single equation in
@@ -438,17 +442,18 @@ footer a:hover{color:var(--accent)}
             between the two primaries.</figcaption>
         </figure>
 
-        <p data-rev>With the Sun&ndash;Earth distance normalised to 1 AU, the solver puts L1 at
+        <p data-rev>With the Sun-Earth distance normalised to 1 AU, the solver puts L1 at
           <strong>x* = 0.9900</strong>, one percent of the way back from Earth toward the Sun. At
           1 AU &asymp; 150 million km, that is roughly <strong>1.5 million km</strong> from Earth.</p>
       </section>
 
       <!-- ============================================================ 06 -->
       <section id="halo">
-        <div class="sechead" data-rev><span class="n">06</span><h2>Choosing a halo</h2></div>
-        <p data-rev>Linearising the equations of motion about L1 and solving for small departures shows it
-          to be a <strong>saddle point</strong>, dynamically unstable, so a spacecraft left sitting there
-          drifts off. Aditya-L1 orbits L1 rather than parking at it.</p>
+        <div class="sechead" data-rev><span class="n">06</span><h2>Selecting the halo orbit</h2></div>
+        <p data-rev>Linearising the equations of motion about L1 and solving for small departures shows it to be a
+          <strong>saddle point</strong>, which is dynamically unstable. A spacecraft left at the
+          point drifts away from it, so Aditya-L1 is placed in an orbit around L1 rather than at
+          the point itself.</p>
 
         <p data-rev>The halo orbit is selected by its out-of-plane amplitude A<sub>z</sub>, which can range from
           zero up to about 920,000 km. Larger halos have a communications penalty, so an intermediate
@@ -481,7 +486,7 @@ footer a:hover{color:var(--accent)}
 
       <!-- ============================================================ 07 -->
       <section id="transfer">
-        <div class="sechead" data-rev><span class="n">07</span><h2>Sphere of influence to L1</h2></div>
+        <div class="sechead" data-rev><span class="n">07</span><h2>Transfer to L1</h2></div>
         <p data-rev>The journey is stitched together with the <strong>patched conic method</strong>: two
           separate two-body problems joined at the boundary of Earth's sphere of influence. Inside it, the
           spacecraft is on a hyperbola about Earth. Outside it, the assumption is that it follows an
@@ -512,24 +517,24 @@ footer a:hover{color:var(--accent)}
 
         <div class="note" data-rev>
           <span class="k">Why &Delta;V&#8322; is not zero</span>
-          <p>At L1 exactly, an idealised spacecraft needs nothing to stay put &mdash; it is an equilibrium
-            point, so the required velocity is zero. In practice L1 is unstable and the halo has to be
-            actively maintained, which works out to roughly <strong>0.2 to 0.4 m/s</strong> of
-            station-keeping. That is what sets &Delta;V&#8322;.</p>
+          <p>At L1 exactly, an idealised spacecraft needs nothing to stay in place, since it is an equilibrium
+            point and the required velocity is zero. In practice L1 is unstable and the halo orbit
+            has to be actively maintained. Station-keeping works out to roughly <strong>0.2 to 0.4
+            m/s</strong>, and that is what sets &Delta;V&#8322;.</p>
         </div>
       </section>
 
       <!-- ============================================================ 08 -->
       <section id="insertion">
         <div class="sechead" data-rev><span class="n">08</span><h2>Halo insertion</h2></div>
-        <p class="lead" data-rev>Section 06 picks the halo from Richardson's linearised solution, which
-          approximates a periodic orbit without being one.</p>
+        <p class="lead" data-rev>The halo orbit in section 06 comes from Richardson&rsquo;s linearised solution, which is an
+          approximation to a periodic orbit rather than a periodic orbit itself.</p>
 
-        <p data-rev>Propagated in the full nonlinear CR3BP it does not close &mdash; the terms the
-          linearisation drops are the ones that make the orbit periodic. Closing it is a separate
-          numerical problem, and this is how it was solved.</p>
+        <p data-rev>Propagated in the full nonlinear CR3BP it does not close, because the terms the linearisation
+          drops are the ones that make the orbit periodic. Closing it is a separate numerical
+          problem, and the rest of this section is how it was solved.</p>
 
-        <h3 data-rev>Seeding the family</h3>
+        <h3 data-rev>Linearising about L1</h3>
         <p data-rev>The first step is linearising about L1, done numerically rather than by transcribing a
           closed-form Jacobian. Central differences on the equations of motion give the 6&times;6 Jacobian
           at the equilibrium state:</p>
@@ -546,17 +551,17 @@ footer a:hover{color:var(--accent)}
           point.</p>
 
         <div class="note" data-rev>
-          <span class="k">Seed amplitude, not just direction</span>
-          <p>The corrector below builds its Jacobian by perturbing x&#8320; by 10&#8315;&#8310;, about
-            150 km. Scale the eigenvector down to a seed of similar size and the perturbation is as large
-            as the orbit, so the finite difference measures nothing useful and Newton diverges within three
-            iterations. Seeding at around 10&#8309; km instead &mdash; the amplitude the orbit will
-            actually have &mdash; keeps the perturbation at a tenth of a percent of the state, and the
-            corrector converges in six.</p>
+          <span class="k">Choosing the seed amplitude</span>
+          <p>The corrector below builds its Jacobian by perturbing x&#8320; by 10&#8315;&#8310;, which is about
+            150 km. If the eigenvector is scaled down to a seed of similar size, the perturbation
+            is as large as the orbit itself, the finite difference measures nothing useful, and
+            Newton diverges within three iterations. Seeding at around 10&#8309; km, which is the
+            amplitude the orbit will actually have, keeps the perturbation at a tenth of a percent
+            of the state and the corrector converges in six iterations.</p>
         </div>
 
-        <h3 data-rev>The corrector</h3>
-        <p data-rev>Halo orbits are symmetric about the x&ndash;z plane, which is what allows a two-variable
+        <h3 data-rev>Differential correction</h3>
+        <p data-rev>Halo orbits are symmetric about the x-z plane, which is what allows a two-variable
           shooting method. The trajectory starts on the plane, moving perpendicular to it:</p>
 
         <div class="eq" data-rev>
@@ -581,14 +586,14 @@ footer a:hover{color:var(--accent)}
           ODE solver rather than by stepping and checking, so the half-period comes out to integrator
           precision instead of step size.</p>
 
-        <h3 data-rev>Continuation</h3>
+        <h3 data-rev>Amplitude continuation</h3>
         <p data-rev>Going straight to the target amplitude would ask Newton to converge from well outside
           its basin, so the amplitude is walked up instead. A<sub>z</sub> steps from 2,000 km to 120,000 km
           over sixty increments, with the corrector re-converging at each one and each solution seeding
           the next.</p>
 
         <div class="note" data-rev>
-          <span class="k">Why the tolerance is 10&#8315;&#8313; and not machine precision</span>
+          <span class="k">Why the tolerance is 10&#8315;&#8313;</span>
           <p>The corrector's Jacobian is built by finite differences with a step of 10&#8315;&#8310;, on
             trajectories integrated to a relative tolerance of 3&times;10&#8315;&#185;&#179;. That puts a
             noise floor of roughly integrator tolerance over step size on the Jacobian itself. Asking for a
@@ -597,13 +602,14 @@ footer a:hover{color:var(--accent)}
             the order of centimetres.</p>
         </div>
 
-        <h3 data-rev>Verification</h3>
-        <p data-rev>The corrector converging is not the same thing as the orbit closing, so the converged
-          state is propagated one full period at tight tolerance and compared with where it started:</p>
+        <h3 data-rev>Verifying the orbit</h3>
+        <p data-rev>Convergence of the corrector does not by itself prove that the orbit closes, so the converged
+          state is propagated one full period at tight tolerance and compared with where it
+          started:</p>
 
         <div class="eq" data-rev>
           <span class="tex">T = 2t_{1/2}, \qquad \varepsilon = \left\lVert \mathbf{r}(T) - \mathbf{r}(0) \right\rVert d</span>
-          <span class="cap">d is the Sun&ndash;Earth distance, converting the non-dimensional closure
+          <span class="cap">d is the Sun-Earth distance, converting the non-dimensional closure
             error back into kilometres.</span>
         </div>
 
@@ -611,8 +617,8 @@ footer a:hover{color:var(--accent)}
           <table>
             <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
             <tbody>
-              <tr><td>x&#8320;</td><td>0.988882 &mdash; 171,200 km sunward of L1</td></tr>
-              <tr><td>z&#8320;</td><td>0.000802 &mdash; A<sub>z</sub> = 120,000 km, as targeted</td></tr>
+              <tr><td>x&#8320;</td><td>0.988882, i.e. 171,200 km sunward of L1</td></tr>
+              <tr><td>z&#8320;</td><td>0.000802, A<sub>z</sub> = 120,000 km as targeted</td></tr>
               <tr><td>&#7823;&#8320;</td><td>+0.008902</td></tr>
               <tr><td>Period</td><td>3.0598 non-dimensional = <strong>177.9 days</strong></td></tr>
               <tr><td>Closure error</td><td>0.228 km in position over one full period</td></tr>
@@ -626,27 +632,28 @@ footer a:hover{color:var(--accent)}
           <img src="../figures/halo-converged.png" alt="Three-dimensional plot of the converged halo orbit, a long inclined loop around the L1 point">
           <figcaption><b>Figure 5 &middot; The converged orbit</b>
             One full period of the corrected solution, plotted about L1 (amber). The loop stands
-            120,000 km out of the ecliptic and runs 665,000 km to either side of the Sun&ndash;Earth
+            120,000 km out of the ecliptic and runs 665,000 km to either side of the Sun-Earth
             line. Axes in km, relative to L1.</figcaption>
         </figure>
 
-        <p data-rev>One revolution takes just under six months. The insertion figure is the speed the
-          spacecraft needs on arrival, measured against a vehicle at rest at that point in the rotating
-          frame. Holding the orbit afterwards costs extra, and that is what the next section is about.</p>
+        <p data-rev>One revolution takes just under six months. The insertion figure is the speed the spacecraft needs
+          on arrival, measured against a vehicle at rest at that point in the rotating frame.
+          Holding the orbit afterwards costs extra.</p>
 
-        <h3 data-rev>Five periods, no corrections</h3>
-        <p data-rev>The last check propagates the converged orbit five full periods with nothing applied
-          to hold it. It closes to within 228 m over the first period and ends up 14.5 million km from
+        <h3 data-rev>Propagating without station-keeping</h3>
+        <p data-rev>The last check propagates the converged orbit for five full periods with nothing applied to hold
+          it. It closes to within 228 m over the first period and ends up 14.5 million km from
           where it started by the fifth.</p>
 
-        <p data-rev>That divergence is physical rather than numerical. L1 is a saddle point and the halo
-          around it inherits the instability, so error grows exponentially: under a kilometre after one
-          revolution, a tenth of an AU after five. The exact five-period figure depends on the integrator
-          &mdash; swapping ode113 for a Dormand&ndash;Prince scheme moves it by a factor of four &mdash;
-          because an orbit this unstable amplifies whatever it is handed, rounding included.</p>
+        <p data-rev>The divergence is physical rather than numerical. L1 is a saddle point and the halo orbit around
+          it inherits that instability, so the error grows exponentially: under a kilometre after
+          one revolution and a tenth of an AU after five. The exact five-period figure also
+          depends on the integrator. Swapping ode113 for a Dormand-Prince scheme moves it by a
+          factor of four, because an orbit this unstable amplifies whatever it is given, including
+          rounding.</p>
 
-        <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for: continuously cancelling
-          a drift the orbit would otherwise follow all the way out.</p>
+        <p data-rev>This is what the 0.2 to 0.4 m/s from section 07 pays for. Without it, the orbit follows that drift
+          all the way out.</p>
 
         <p class="seealso" data-rev>
           <a href="viewer/#halo">Replay the insertion on its own &#8599;</a>

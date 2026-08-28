@@ -449,19 +449,19 @@ const CAPTIONS = [
   [A1_W[2][0],   'Burn 2 at perigee',   `apogee → ${fmt(M.raiseApogees[2])} km`],
   [A1_W[3][0],   'Burn 3 at perigee',   `apogee → ${fmt(M.raiseApogees[3])} km`],
   [A1_W[4][0],   'Burn 4 at perigee',   `apogee → ${fmt(M.raiseApogees[4])} km`],
-  [A1_W[4][0] + 1.1, 'Coasting to perigee', 'the Oberth effect makes this the cheapest place to burn'],
-  [A1_ESC0,      'Escape burn',         `${M.escapeDvMs} m/s, and Earth no longer holds it`],
+  [A1_W[4][0] + 1.1, 'Coasting to perigee', 'the Oberth effect makes perigee the cheapest place to burn'],
+  [A1_ESC0,      'Escape burn',         `${M.escapeDvMs} m/s, enough to leave Earth\u2019s sphere of influence`],
   [A1_ESC0 + 1.9, 'Crossing the sphere of influence',
                   `925,000 km, ${M.escapeDays.toFixed(1)} days after the burn`],
   [15.5,  'Now measured against the Sun',      'the spacecraft carries Earth’s 29.8 km/s with it'],
   [17.6,  'Lambert transfer arc',              '110 days from the sphere of influence to L1'],
   [21.0,  'Sun, Earth, spacecraft',            'the whole transfer in one frame'],
-  [22.6,  'Locking to the rotating frame',     'Earth held fixed on the Sun–Earth line'],
+  [22.6,  'Locking to the rotating frame',     'Earth held fixed on the Sun-Earth line'],
   [26.4,  'Closing on L1',                     'the destination is 1.5 million km sunward of Earth'],
   [29.0,  'Arrival at L1',                     '1,491,551 km sunward of Earth'],
   [30.6,  'Insertion burn',                    '265 m/s onto the halo'],
   [32.6,  'Halo orbit',                        'A_z = 120,000 km, one lap every 177.9 days'],
-  [39.5,  'Unstable by nature',                'holding it costs 0.2–0.4 m/s of station-keeping']
+  [39.5,  'The orbit is unstable',             'holding it costs 0.2 to 0.4 m/s of station-keeping']
 ];
 
 const elPhase = document.getElementById('cap-phase');

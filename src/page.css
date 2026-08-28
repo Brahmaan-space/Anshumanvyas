@@ -132,7 +132,10 @@ tr.burn td{color:var(--ink)}
 .note p{margin:0; font-size:16px}
 
 /* ----------------------------------------------------------- embedded viewer */
-.lede{margin:6px 0 clamp(40px,6vh,64px)}
+/* margin-top/bottom only. A `margin` shorthand here would set the horizontal
+   margins to 0 and kill .shell's `margin:0 auto`, so the viewer would sit hard
+   left while the rest of the page centred. */
+.lede{margin-top:6px; margin-bottom:clamp(40px,6vh,64px)}
 .viewer{margin:0}
 .doc .viewer{margin:34px 0 0}
 
