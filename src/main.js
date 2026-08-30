@@ -240,9 +240,75 @@ function objSlot() {
   return g;
 }
 
+// 04 lake survey: operational volume, survey track and the aircraft flying it
+function objSurvey() {
+  const g = new Group();
+  const dot = new SphereGeometry(0.011, 8, 6);
+  const dotMat = new MeshBasicMaterial({ color: PAL.accent, transparent: true, opacity: 0.85 });
+
+  // the lake, a closed loop under the track
+  const lake = [];
+  for (let i = 0; i <= 72; i++) {
+    const a = (i / 72) * Math.PI * 2;
+    lake.push(new Vector3(Math.cos(a) * 0.15, -0.19, Math.sin(a) * 0.33));
+  }
+  g.add(new Line(new BufferGeometry().setFromPoints(lake), lineMat(PAL.accent, 0.45)));
+
+  // flight geography plus contingency volume
+  g.add(new LineSegments(new EdgesGeometry(new BoxGeometry(0.60, 0.44, 0.84)), lineMat(PAL.amber, 0.26)));
+
+  // survey track with waypoints on it
+  const P = (u) => new Vector3(Math.sin(u * Math.PI * 2) * 0.15, 0.02, (u - 0.5) * 0.68);
+  const track = [];
+  for (let i = 0; i <= 90; i++) track.push(P(i / 90));
+  g.add(new Line(new BufferGeometry().setFromPoints(track), lineMat(PAL.ink, 0.34)));
+  for (let i = 0; i <= 8; i++) {
+    const s = new Mesh(dot, dotMat); s.position.copy(P(i / 8)); g.add(s);
+  }
+
+  const craft = new Mesh(new BoxGeometry(0.05, 0.014, 0.085), new MeshBasicMaterial({ color: PAL.amber }));
+  g.add(craft);
+  g.userData.tick = (t) => {
+    const u = (t * 0.12) % 1;
+    craft.position.copy(P(u));
+    craft.rotation.y = Math.cos(u * Math.PI * 2) * 0.5;
+    g.rotation.y = Math.sin(t * 0.11) * 0.3 + 0.3;
+  };
+  return g;
+}
+
+// 05 three aircraft on deconflicted routes at separated altitudes
+function objFleet() {
+  const g = new Group();
+  const cols = [PAL.accent, PAL.amber, PAL.violet];
+  const dot = new SphereGeometry(0.009, 8, 6);
+  const craft = [];
+  for (let k = 0; k < 3; k++) {
+    const amp = 0.13 + k * 0.05, ph = k * 0.9, y = -0.13 + k * 0.13, len = 0.62;
+    const P = (u) => new Vector3(Math.sin(u * Math.PI * 2 + ph) * amp, y, (u - 0.5) * len);
+    const pts = [];
+    for (let i = 0; i <= 90; i++) pts.push(P(i / 90));
+    g.add(new Line(new BufferGeometry().setFromPoints(pts), lineMat(cols[k], 0.45)));
+    const dm = new MeshBasicMaterial({ color: cols[k], transparent: true, opacity: 0.8 });
+    for (let i = 0; i <= 6; i++) { const s = new Mesh(dot, dm); s.position.copy(P(i / 6)); g.add(s); }
+    const mm = new Mesh(new BoxGeometry(0.042, 0.011, 0.07), new MeshBasicMaterial({ color: cols[k] }));
+    g.add(mm);
+    craft.push({ mm, P, ph, sp: 0.1 + k * 0.02 });
+  }
+  g.userData.tick = (t) => {
+    craft.forEach((c) => {
+      const u = (t * c.sp) % 1;
+      c.mm.position.copy(c.P(u));
+      c.mm.rotation.y = Math.cos(u * Math.PI * 2 + c.ph) * 0.6;
+    });
+    g.rotation.y = Math.sin(t * 0.1) * 0.34 + 0.28;
+  };
+  return g;
+}
+
 // each focus object gets a wrapper so the fade-scale never fights its base transform
-const FOCUS_FIT = [[0.94, 0.02], [0.74, -0.26], [0.70, -0.04], [0.95, 0], [0.95, 0]];
-const focusObjs = [objOrbit(), objArm(), objCloud(), objSlot(), objSlot()].map((inner, i) => {
+const FOCUS_FIT = [[0.94, 0.02], [0.74, -0.26], [0.70, -0.04], [0.86, 0.00], [0.82, 0.00]];
+const focusObjs = [objOrbit(), objArm(), objCloud(), objSurvey(), objFleet()].map((inner, i) => {
   const w = new Group();
   inner.scale.setScalar(FOCUS_FIT[i][0]);
   inner.position.y = FOCUS_FIT[i][1];

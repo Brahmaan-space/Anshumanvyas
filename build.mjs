@@ -72,6 +72,32 @@ const PAGES = [
     canonical: '/work/capture-manipulator/'
   },
   {
+    src: 'src/work-hab.html',
+    entry: 'src/page.js',
+    out: 'work/hab-mission/index.html',
+    base: '../../',
+    title: 'Permission to fly | Anshuman Vyas',
+    description:
+      'Designing an unmanned aircraft operation to find harmful algae blooms on a city drinking-water ' +
+      'reservoir: three-stage platform selection, a nine-phase concept of operations, an emergency ' +
+      'escalation table, and a JARUS SORA safety case taken to SAIL II.',
+    image: 'og.png',
+    canonical: '/work/hab-mission/'
+  },
+  {
+    src: 'src/work-survey.html',
+    entry: 'src/page.js',
+    out: 'work/whale-survey/index.html',
+    base: '../../',
+    title: 'Counting whales from 5,000 feet | Anshuman Vyas',
+    description:
+      'A three-aircraft autonomous survey of the Bay of Fundy: requirements derived from the concept of ' +
+      'operations, deconflicted waypoint routes, and an operational volume sized from a total system ' +
+      'error budget of path definition, flight technical and navigational error.',
+    image: 'og.png',
+    canonical: '/work/whale-survey/'
+  },
+  {
     src: 'src/viewer-arm.html',
     entry: 'src/viewer-arm.js',
     out: 'work/capture-manipulator/viewer/index.html',

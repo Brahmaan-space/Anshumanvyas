@@ -1,0 +1,479 @@
+<title>Permission to fly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+
+<style>/*__PAGECSS__*/</style>
+<!--/head-->
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
+
+<nav>
+  <a class="brand" href="../../">Anshuman Vyas<i>.</i></a>
+  <div class="nav-links">
+    <a href="../../#work">Work</a>
+    <a href="../../#research">Research</a>
+    <a href="../../#track">Path</a>
+    <a href="../../#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero shell">
+    <a class="back" href="../../#work">&larr; Selected work</a>
+    <span class="eyebrow" data-rev>04 &middot; Mission design</span>
+    <h1 data-rev>Permission to fly</h1>
+    <p class="dek" data-rev>A city wants its drinking water watched for algae blooms from the air. Picking an
+      aircraft is the easy half. The hard half is building the argument that says this aircraft, on this route,
+      on this day, is safe enough to be allowed over a lake at all.</p>
+
+    <dl class="facts" data-rev>
+      <div class="fact"><dt>Client</dt><dd>City of Syracuse<br>response to an RFP</dd></div>
+      <div class="fact"><dt>Scene</dt><dd>Skaneateles Lake, NY<br>~50 km survey track</dd></div>
+      <div class="fact"><dt>Aircraft</dt><dd>Skyeye Sierra VTOL<br>12.5 kg, 3 h endurance</dd></div>
+      <div class="fact"><dt>Safety case</dt><dd>JARUS SORA<br>SAIL II</dd></div>
+      <div class="fact"><dt>Risk classes</dt><dd>GRC 3 &rarr; 1<br>ARC-d &rarr; ARC-b</dd></div>
+      <div class="fact"><dt>Tools</dt><dd>STK &middot; Fusion 360</dd></div>
+    </dl>
+  </header>
+
+  <div class="shell doc">
+    <nav class="toc" aria-label="Sections">
+      <a href="#problem"><span>01</span> Problem</a>
+      <a href="#selection"><span>02</span> Selection</a>
+      <a href="#aircraft"><span>03</span> Aircraft</a>
+      <a href="#conops"><span>04</span> ConOps</a>
+      <a href="#emergency"><span>05</span> Failures</a>
+      <a href="#sora"><span>06</span> Safety case</a>
+      <a href="#altitude"><span>07</span> Altitude</a>
+      <a href="#cost"><span>08</span> Cost</a>
+      <a href="#limits"><span>09</span> Limits</a>
+    </nav>
+
+    <main>
+      <!-- ============================================================ 01 -->
+      <section id="problem">
+        <div class="sechead" data-rev><span class="n">01</span><h2>The problem</h2></div>
+        <p class="lead" data-rev>Skaneateles Lake is the primary water supply for the City of Syracuse.
+          Harmful algae blooms have been appearing in it, and once a bloom is large enough to see from shore
+          it is already a treatment problem.</p>
+
+        <p data-rev>Blooms are cyanobacteria growing fast enough to strip oxygen out of the water. They kill fish,
+          they release toxins, and for a city drinking from the lake they mean intensive monitoring and
+          treatment. Catching them early is worth a lot, and catching them early means looking at the whole
+          lake often rather than sampling a few points from a boat.</p>
+
+        <p data-rev>The city issued a request for proposal for an unmanned aircraft system that could find and map
+          blooms in near real time and guide a sampling boat to them. This project is the response to that
+          RFP: pick the aircraft, design the operation around it, and produce the safety case and airspace
+          paperwork that would let it fly.</p>
+
+        <p class="credit" data-rev>Group project with a team of four at Carleton University.</p>
+      </section>
+
+      <!-- ============================================================ 02 -->
+      <section id="selection">
+        <div class="sechead" data-rev><span class="n">02</span><h2>Choosing the aircraft</h2></div>
+        <p data-rev>Aircraft selection ran as a three-stage score. The point of splitting it was to stop a
+          capable but non-compliant aircraft from scoring well on performance and surviving to the end.</p>
+
+        <p data-rev><strong>Stage one is pass or fail.</strong> Each candidate scores 1 or 0 against the
+          regulations the operation is bound by, with a written reason recorded next to every score so the
+          decision stays traceable. Parachute equipped, maximum mass at or under 25 kg, no laceration risk.
+          An aircraft failing any single line is out, regardless of how good the rest of it is.</p>
+
+        <p data-rev><strong>Stage two scores what the mission needs</strong> from 3 down to 1, where 3 exceeds
+          the requirement and 1 fails to meet it. Flight range against a 100 km target, launch and recovery
+          compatibility, ease of transport and setup, availability of the energy source, autonomous waypoint
+          following, and whether the hyperspectral imager comes integrated.</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Mission and design requirements</caption>
+            <thead><tr><th>Mission requirement</th><th>Design requirement</th></tr></thead>
+            <tbody>
+              <tr><td>Range</td><td>At least 100 km</td></tr>
+              <tr><td>Max altitude</td><td>At least 760 m (2,500 ft)</td></tr>
+              <tr><td>Launch method</td><td>Hand launched or VTOL</td></tr>
+              <tr><td>Recovery method</td><td>Parachute or VTOL</td></tr>
+              <tr><td>Autonomy</td><td>Waypoint following</td></tr>
+              <tr><td>Energy source</td><td>High availability</td></tr>
+              <tr><td>Payload</td><td>Hyperspectral imager and optical camera</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>Range and altitude both fall out of the survey track needed to cover the lake. Nowhere around
+          the lake has room for a conventional runway, which is what forces VTOL or a hand launch with
+          parachute recovery. Waypoint following is in there because the mission is monotonous, and a bored
+          pilot flying the same track for three hours is a hazard the autopilot removes.</p>
+
+        <div class="note" data-rev>
+          <span class="k">Why stage three exists</span>
+          <p>More than one aircraft cleared the first two stages, so the last stage compares the survivors
+            directly and picks the one that sits closest to the requirements rather than furthest above them.
+            An aircraft that beats every number by a wide margin is an aircraft the operation is paying for
+            and not using.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ 03 -->
+      <section id="aircraft">
+        <div class="sechead" data-rev><span class="n">03</span><h2>The aircraft and what it carries</h2></div>
+        <p data-rev>The selected aircraft is the ElevonX Skyeye Sierra VTOL, a hybrid multirotor and fixed-wing
+          design. Five electric motors: four lifting rotors for vertical takeoff and landing, and one pusher
+          for forward flight.</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Skyeye Sierra VTOL parameters</caption>
+            <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Aircraft weight</td><td>12.5 kg</td></tr>
+              <tr><td>Payload weight</td><td>0.46 kg</td></tr>
+              <tr><td>Dimensions</td><td>310 &times; 152 cm</td></tr>
+              <tr><td>Operational range</td><td>320 km</td></tr>
+              <tr><td>Endurance</td><td>3 hours</td></tr>
+              <tr><td>Operational footprint</td><td>10 &times; 10 m</td></tr>
+              <tr><td>Link</td><td>868 or 900 MHz, 57 kbps</td></tr>
+              <tr><td>Recovery</td><td>Parachute equipped</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <figure data-rev>
+          <img src="../figures/hab-aircraft.jpg" alt="The Skyeye Sierra VTOL on the ground and in forward flight">
+          <figcaption><b>Figure 1 &middot; Skyeye Sierra VTOL</b>
+            Four lift rotors on booms either side of the fuselage and a single pusher motor at the tail. The
+            aircraft takes off vertically, transitions to wing-borne flight for the survey, and comes back
+            down on the rotors.</figcaption>
+        </figure>
+
+        <p data-rev>The payload is a MicaSense Altum-PT, integrated by the manufacturer. Detection runs in four
+          steps rather than one: enhance and normalise the RGB imagery, classify each frame as non-algal,
+          indeterminate or definite bloom, extract the water area and mask out shoreline and vegetation so
+          the surroundings stop interfering, then run a classic machine learning model over what is left and
+          separate algae genera by spectral band against a lab-derived library.</p>
+
+        <figure class="wide" data-rev>
+          <img src="../figures/hab-detection-flow.png" alt="Flow chart of the image processing and algae identification pipeline">
+          <figcaption><b>Figure 2 &middot; Detection pipeline</b>
+            Image enhancement and classification, water masking, bloom detection, then spectral separation of
+            genera against the reference library.</figcaption>
+        </figure>
+
+        <h3 data-rev>The link budget nobody asks about</h3>
+        <p data-rev>Two data links matter. The optical image downlink is mission critical, because the boat crew
+          navigates to sampling points using it. The control uplink is safety critical, because it is what
+          moves the aircraft if something else enters the airspace.</p>
+
+        <p data-rev>Skaneateles Lake sits near a lot of cell infrastructure, so the towers are a plausible
+          interference source. Taking the nearest tower to the flight path, in Syracuse at roughly 1,500 m,
+          and treating its signal as noise at the aircraft:</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Cell tower interference parameters</caption>
+            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Power output</td><td>3 kW</td></tr>
+              <tr><td>Antenna gain</td><td>18</td></tr>
+              <tr><td>Total loss</td><td>1 (worst case)</td></tr>
+              <tr><td>Frequency</td><td>900 MHz</td></tr>
+              <tr><td>Minimum range</td><td>1,500 m</td></tr>
+              <tr class="burn"><td>Noise at aircraft</td><td>16.9 &micro;W, &minus;17.72 dBm</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>That number on its own does not close the analysis. Whether the link survives it depends on the
+          required signal-to-noise ratio and the transmitter power of the radio, and the manufacturer
+          publishes neither. The honest output of this section is a question for the OEM rather than an
+          answer.</p>
+      </section>
+
+      <!-- ============================================================ 04 -->
+      <section id="conops">
+        <div class="sechead" data-rev><span class="n">04</span><h2>Concept of operations</h2></div>
+        <p class="lead" data-rev>The operation is nine phases long and half of it happens on a boat.</p>
+
+        <p data-rev>Boat launch, aircraft takeoff, ascent, loiter, cruise and survey, loiter again, descent,
+          landing, then boat recovery and packup. The aircraft takes off vertically from the marina while the
+          pilot is still on land watching it, climbs to survey altitude on pre-loaded waypoints, and holds at
+          a point offshore called the home waypoint while the pilot walks down and boards the boat.</p>
+
+        <figure data-rev>
+          <img src="../figures/hab-mission-track.jpg" alt="Satellite view of Skaneateles Lake with the aircraft survey track and the boat route marked">
+          <figcaption><b>Figure 3 &middot; Survey track</b>
+            The aircraft track down the lake and back, with the boat following its own waypoints underneath.
+            The boat is slower, so its route is planned to intercept bloom locations rather than to follow the
+            aircraft.</figcaption>
+        </figure>
+
+        <p data-rev>The home waypoint is doing more work than it looks. It is a hover position offshore, chosen so
+          the aircraft is not loitering above anyone uninvolved in the mission, and it is the place the
+          aircraft is commanded back to when anything goes wrong. Having one defined recovery position that
+          every contingency can reference is what keeps the emergency procedures short.</p>
+
+        <p data-rev>During the survey the pilot does not fly the aircraft. It follows its waypoints while the pilot
+          monitors telemetry and a dedicated visual observer scans the airspace for traffic. When a frame comes
+          back flagged as a bloom, the aircraft sends the GPS coordinate and a marked RGB image down to the
+          boat, and the technician adjusts the boat route to intercept it and take a water sample.</p>
+      </section>
+
+      <!-- ============================================================ 05 -->
+      <section id="emergency">
+        <div class="sechead" data-rev><span class="n">05</span><h2>What happens when it goes wrong</h2></div>
+        <p class="lead" data-rev>Every failure gets one defined response, and the responses escalate in a fixed
+          order so nobody has to invent a plan mid-flight.</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Emergency procedures and event escalation</caption>
+            <thead><tr><th>Event</th><th>Response</th></tr></thead>
+            <tbody>
+              <tr><td>Collision hazard</td><td>Adjust flight path clear of the intruder, drop to the Part 107 400 ft ceiling</td></tr>
+              <tr><td>Leaves flight geography</td><td>Commanded or manually flown back inside</td></tr>
+              <tr class="burn"><td>Leaves contingency volume</td><td>Flown back; parachute deployed to end the mission if unresponsive</td></tr>
+              <tr><td>Partial control surface failure</td><td>Return to home point and begin emergency landing; parachute if navigation is not possible</td></tr>
+              <tr class="burn"><td>Total control surface failure</td><td>Parachute deployed to end the mission</td></tr>
+              <tr><td>Loss of communication link</td><td>Crew maintains visual and monitors airspace; failsafe triggers if the aircraft exits the contingency volume</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>The structure that matters here is that the parachute is not the answer to everything. It is the
+          last item in an escalation, and the aircraft has to have failed to respond to a command before it
+          fires. A programmed failsafe covers the case where several of these happen together, so an aircraft
+          that has lost its link and then leaves the contingency volume comes down without waiting for a
+          decision it cannot receive.</p>
+
+        <figure data-rev>
+          <img src="../figures/hab-parachute.jpg" alt="The Galaxy GBS 10 parachute recovery system installed on the airframe">
+          <figcaption><b>Figure 4 &middot; The recovery system</b>
+            Galaxy GBS 10, an off-the-shelf parachute system. Its test report and third-party accreditation are
+            what let it count as a high-robustness mitigation in section 06 rather than a claim.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 06 -->
+      <section id="sora">
+        <div class="sechead" data-rev><span class="n">06</span><h2>The safety case</h2></div>
+        <p class="lead" data-rev>This is the part of the project that took the longest and the part that decides
+          whether any of the rest is allowed to happen.</p>
+
+        <p data-rev>The method is the Specific Operations Risk Assessment developed by JARUS. It works by
+          establishing how much harm the operation could do on the ground and in the air, applying mitigations
+          to bring both down, and landing on a Safety Assurance Integrity Level that sets how rigorously
+          everything else has to be demonstrated. This operation came out at <strong>SAIL II</strong>.</p>
+
+        <h3 data-rev>Operational volume</h3>
+        <p data-rev>The flight geography is the volume the aircraft is supposed to stay in. Around it sits the
+          contingency volume, which is the buffer it is allowed to stray into before the emergency procedures
+          start escalating. Here the waypoints never come within 500 ft of the shoreline, and that 500 ft line
+          is where the contingency volume begins.</p>
+
+        <figure data-rev>
+          <img src="../figures/hab-operational-volume.jpg" alt="The operational volume drawn as a dotted boundary around Skaneateles Lake">
+          <figcaption><b>Figure 5 &middot; Operational volume</b>
+            Flight geography plus contingency volume over the lake. Keeping the whole thing over water is
+            what most of the ground risk argument rests on.</figcaption>
+        </figure>
+
+        <h3 data-rev>Ground risk</h3>
+        <p data-rev>Intrinsic ground risk comes from how much energy the aircraft carries into an impact, so the
+          worst-case kinetic energy is computed for both flight regimes:</p>
+
+        <div class="eq" data-rev>
+          <span class="tex">KE = \tfrac{1}{2}mv^{2}</span>
+          <span class="cap">Evaluated separately for the fixed-wing and rotor-borne segments, since the
+            cruise and hover speeds differ by a factor of three.</span>
+        </div>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Kinetic energy calculation</caption>
+            <thead><tr><th>Regime</th><th>Mass</th><th>Speed</th><th>Kinetic energy</th></tr></thead>
+            <tbody>
+              <tr><td>Fixed wing</td><td>12.96 kg</td><td>18 m/s</td><td>2,100 J</td></tr>
+              <tr><td>Rotorcraft</td><td>12.96 kg</td><td>52.75 m/s</td><td>18,031 J</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>Both sit under the 34 kJ band. Combined with flying beyond visual line of sight outside a
+          population centre, that puts the intrinsic ground risk class at <strong>3</strong>, which is not
+          acceptable as it stands.</p>
+
+        <p data-rev>Two mitigations bring it down. M1 reduces the number of people at risk: the mission runs over
+          the middle of the lake, and only takeoff and landing happen over land, with the aircraft loitering
+          over water in between. That argument is assessed at low robustness and takes off 1. M2 reduces the
+          energy at impact, and it is the parachute. Because the Galaxy GBS 10 has a laboratory test report and
+          has been accredited by a competent third-party military institution, it counts as high robustness and
+          takes off 2. Final ground risk class <strong>1</strong>.</p>
+
+        <h3 data-rev>Air risk</h3>
+        <p data-rev>The survey runs at 2,500 ft, inside Class E5 controlled airspace, which puts the initial air
+          risk at ARC-d and an initial generalised density rating of 4.</p>
+
+        <figure data-rev>
+          <img src="../figures/hab-airspace.jpg" alt="Sectional chart showing Class E5 airspace floors of 700 ft and 1200 ft over the lake">
+          <figcaption><b>Figure 6 &middot; Airspace</b>
+            Class E5 floors over the operating area. The survey altitude sits inside controlled airspace, which
+            is what sets the starting air risk class.</figcaption>
+        </figure>
+
+        <p data-rev>JARUS Annex C allows an operator to argue the generalised density rating is wrong for their
+          specific operation, so rather than accepting the default we went and measured it. Two days of flight
+          radar data were collected over the operational volume.</p>
+
+        <div class="fig2" data-rev>
+          <figure>
+            <img src="../figures/hab-radar-time.png" alt="Scatter plot of aircraft altitude over the lake against time of day for two days">
+            <figcaption><b>By time of day</b> Every aircraft over the lake, plotted by altitude and time.</figcaption>
+          </figure>
+          <figure>
+            <img src="../figures/hab-radar-altitude.png" alt="Histogram of aircraft density by altitude band over the lake">
+            <figcaption><b>By altitude</b> Density against altitude band across both days.</figcaption>
+          </figure>
+        </div>
+
+        <p data-rev>Across both days only seven aircraft came within 500 ft of the mission altitude, and every one
+          of them was in the afternoon. Restricting the operation to mornings drops the density rating to 1 and
+          the air risk to <strong>ARC-b</strong>. Tactical mitigations stay in place regardless: the pilot in
+          communication with local air traffic control, published NOTAMs, and a dedicated visual observer
+          watching for non-cooperative traffic.</p>
+
+        <div class="note" data-rev>
+          <span class="k">Why this is the interesting result</span>
+          <p>The density rating is a default that the method hands you, and defaults are conservative because
+            they have to cover everyone. Two days of publicly available tracking data turned a conservative
+            assumption into a measured one, and moved the operation two classes. It cost nothing but the time
+            to collect it.</p>
+        </div>
+
+        <h3 data-rev>Safety objectives</h3>
+        <p data-rev>SAIL II brings 24 Operational Safety Objectives with it, covering everything from crew
+          training and procedures to the design of the aircraft and how the operation deals with deteriorating
+          weather. All 24 were evaluated against the operation as described, and each was met or exceeded at
+          the level SAIL II requires. Adjacent airspace containment is satisfied by the escalation table in
+          section 05.</p>
+      </section>
+
+      <!-- ============================================================ 07 -->
+      <section id="altitude">
+        <div class="sechead" data-rev><span class="n">07</span><h2>The altitude decision</h2></div>
+        <p class="lead" data-rev>The single largest efficiency gain in the mission came from flying higher and
+          accepting more paperwork.</p>
+
+        <p data-rev>The mission was first planned at 400 ft, because staying under that ceiling is what avoids most
+          of the waivers and authorisations. Simulating it in STK showed why that does not work here. The lake
+          is long, the swath from 400 ft is narrow, and covering the whole surface takes a track of roughly
+          <strong>250 km</strong> flown as a dense back-and-forth pattern. That is well beyond a single sortie
+          and it loads the aircraft with turns.</p>
+
+        <p data-rev>Climbing to 2,500 ft widens the swath enough that the lake is covered by traversing it once and
+          returning, dropping the track to about <strong>50 km</strong>. Same coverage, a fifth of the distance,
+          a fraction of the maneuvering, and a scan that fits comfortably inside the endurance.</p>
+
+        <div class="tw" data-rev>
+          <table>
+            <caption class="sr-only">Altitude trade</caption>
+            <thead><tr><th>Survey altitude</th><th>Track length</th><th>Consequence</th></tr></thead>
+            <tbody>
+              <tr><td>400 ft</td><td>~250 km</td><td>Minimal authorisation, impractical flight time</td></tr>
+              <tr class="burn"><td>2,500 ft</td><td>~50 km</td><td>Single traverse, Class E5 airspace authorisation required</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p data-rev>The cost of that decision is the entire air risk problem in section 06. Flying at 2,500 ft is
+          what put the operation in controlled airspace and started it at ARC-d. The trade was worth making, and
+          the flight radar work is what paid for it.</p>
+
+        <figure data-rev>
+          <img src="../figures/survey-twin-a.png" alt="Fusion 360 digital twin of the survey aircraft">
+          <figcaption><b>Figure 7 &middot; Digital twin</b>
+            The aircraft rebuilt in Fusion 360 from manufacturer photographs and published overall dimensions,
+            since no technical drawing or blueprint was available. The twin is what the mission simulation
+            flies.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============================================================ 08 -->
+      <section id="cost">
+        <div class="sechead" data-rev><span class="n">08</span><h2>What it costs to run</h2></div>
+        <p data-rev>The mission is 106 days, from 1 May to 30 September, flying roughly three hours a day through
+          bloom season. Costs were split into what it takes to stand the capability up and what it takes to
+          keep it flying.</p>
+
+        <figure data-rev>
+          <img src="../figures/hab-lifecycle-cost.png" alt="Pie chart of lifecycle cost split across acquisition, maintenance, operations and repairs">
+          <figcaption><b>Figure 8 &middot; Lifecycle split</b>
+            Initial acquisition 43%, operations 52%, maintenance 3%, repairs 2%. Operations dominate because
+            the mission is staffed by people for a whole season.</figcaption>
+        </figure>
+
+        <p data-rev>Acquisition is the aircraft, the camera, the water sampling kit, crew training and the
+          registration and knowledge test fees. Running costs are dominated by salaries, followed by vehicle
+          rental, fuel for the boat and truck, insurance, marina mooring and battery replacement. Repairs come
+          out low on the assumption that a reliable platform selected through section 02 and a real maintenance
+          plan keep them there, which is an assumption rather than a measurement.</p>
+
+        <p data-rev>At end of life the whole system, aircraft and support equipment together, is handed to the
+          city rather than written off, since continuous maintenance through the season leaves it
+          serviceable.</p>
+      </section>
+
+      <!-- ============================================================ 09 -->
+      <section id="limits">
+        <div class="sechead" data-rev><span class="n">09</span><h2>Limitations</h2></div>
+        <p class="lead" data-rev>This is a feasibility study and a paper safety case. Nothing here has flown.</p>
+
+        <p data-rev>The largest open item is the communications analysis in section 03. The interference figure is
+          computed, but without the transmitter power and required signal-to-noise ratio from the manufacturer
+          there is no way to say whether the links close at range over that lake. That is the first thing that
+          would need answering before anyone committed to this aircraft.</p>
+
+        <p data-rev>The detection pipeline is specified from published literature rather than built and trained.
+          It describes what would classify a bloom and how genera would be separated, but no model was trained
+          on Skaneateles imagery and no detection performance is claimed.</p>
+
+        <p data-rev>The ground risk mitigation assessed at low robustness is the weakest part of the SORA
+          argument. It rests on the mission being over water and people being unlikely to be there, which is
+          reasonable for a lake in a rural county and would not survive being moved anywhere busier.</p>
+
+        <p data-rev>The paperwork the project produced is written to the FAA process, since the client is a US
+          city. Moving it to Canada would mean redoing the airspace authorisation against Transport Canada
+          rules, and privacy law near residential shoreline would need its own look. Cold weather operation
+          would also change the endurance numbers the whole schedule depends on.</p>
+      </section>
+
+      <div class="pageend" data-rev>
+        <a href="../../#work">&larr; All selected work</a>
+        <a href="../../#contact">Get in touch &rarr;</a>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <span><a href="../../">Anshuman Vyas</a> &middot; Ottawa, Canada</span>
+    <span>&copy; 2026 Anshuman Vyas &middot; All rights reserved</span>
+  </footer>
+</div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script>
+  window.addEventListener('load', function () {
+    if (!window.katex) return;
+    document.querySelectorAll('.eq .tex').forEach(function (el) {
+      try {
+        katex.render(el.textContent, el, { displayMode: true, throwOnError: false });
+      } catch (e) { /* leave the source visible rather than blanking the equation */ }
+    });
+  });
+</script>
+<script>/*__BUNDLE__*/</script>
