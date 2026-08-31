@@ -259,9 +259,9 @@ footer a:hover{color:var(--accent)}
     <a class="back" href="../../#work">&larr; Selected work</a>
     <span class="eyebrow" data-rev>06 &middot; Survey planning</span>
     <h1 data-rev>Two passes over Banff</h1>
-    <p class="dek" data-rev>A LiDAR survey of two square kilometres of national park, where the terrain
-      climbs 500 m across the site. Holding the sensor a constant hundred metres above ground when the
-      ground will not stay still is most of the problem.</p>
+    <p class="dek" data-rev>A LiDAR topographical survey of two square kilometres of Banff National Park,
+      covering sensor and platform selection, two survey patterns holding a constant height above terrain that
+      varies by 530 m, and the regulatory case for operating inside a protected area.</p>
 
     <dl class="facts" data-rev>
       <div class="fact"><dt>Site</dt><dd>Banff National Park<br>2 km&sup2;, mixed terrain</dd></div>
@@ -280,8 +280,8 @@ footer a:hover{color:var(--accent)}
       <a href="#aircraft"><span>03</span> Aircraft</a>
       <a href="#patterns"><span>04</span> Patterns</a>
       <a href="#processing"><span>05</span> Processing</a>
-      <a href="#permission"><span>06</span> Permission</a>
-      <a href="#detection"><span>07</span> Detection</a>
+      <a href="#permission"><span>06</span> Approvals</a>
+      <a href="#detection"><span>07</span> Resolution</a>
       <a href="#limits"><span>08</span> Limits</a>
     </nav>
 
@@ -289,122 +289,122 @@ footer a:hover{color:var(--accent)}
       <!-- ============================================================ 01 -->
       <section id="problem">
         <div class="sechead" data-rev><span class="n">01</span><h2>The problem</h2></div>
-        <p class="lead" data-rev>Map two square kilometres of Banff National Park in enough detail to plan
-          trails and infrastructure through it, without disturbing what is already there.</p>
+        <p class="lead" data-rev>Map two square kilometres of Banff National Park in enough detail to plan trails
+          and infrastructure, with minimal disturbance to the site.</p>
 
-        <p data-rev>The site is not one kind of ground. It contains a stretch of the Bow River, forest either
-          side of it, and a mountainous section that climbs several hundred metres above the valley floor.
-          Those three surfaces want different things from a survey. Forest needs enough returns to separate
-          canopy from the ground underneath it. Water returns almost nothing. Steep rock needs point density
-          on faces that are nearly edge-on to the aircraft.</p>
+        <p data-rev>The survey area contains three distinct terrain types: a stretch of the Bow River, forest on
+          either side of it, and a mountainous section several hundred metres above the valley floor. Each
+          places different demands on the survey. Forest requires enough returns to separate canopy from the
+          ground beneath it. Water returns very little. Steep rock requires point density on faces that sit at
+          a shallow angle to the aircraft.</p>
 
-        <p data-rev>Planning around that is what this project is: pick the sensor, pick the aircraft that can
-          carry it, design flight patterns that hold a useful standoff over terrain that keeps changing height,
-          and produce the regulatory case for flying a drone inside a protected national park.</p>
+        <p data-rev>The work covers sensor selection, aircraft selection, flight pattern design that maintains a
+          usable standoff over terrain of varying height, and the regulatory case for operating an unmanned
+          aircraft inside a national park.</p>
       </section>
 
       <!-- ============================================================ 02 -->
       <section id="sensor">
-        <div class="sechead" data-rev><span class="n">02</span><h2>Choosing the sensor first</h2></div>
-        <p data-rev>The sensor is chosen before the aircraft, because on a survey the sensor sets the mission
-          and the aircraft is whatever can carry it for long enough.</p>
+        <div class="sechead" data-rev><span class="n">02</span><h2>Sensor selection</h2></div>
+        <p data-rev>The sensor was selected before the aircraft. On a survey mission the sensor determines the
+          data requirements, and the aircraft requirement follows from carrying it for the necessary
+          duration.</p>
 
-        <p data-rev>The MNM LiDAR system weighs 730 g and pairs a multi-return scanner with a tactical-grade
+        <p data-rev>The MNM LiDAR system weighs 730 g and combines a multi-return scanner with a tactical-grade
           inertial measurement unit and a multi-frequency GNSS receiver.</p>
 
         <div class="tw" data-rev>
           <table>
             <caption class="sr-only">MNM LiDAR specifications</caption>
-            <thead><tr><th>Specification</th><th>Value</th><th>Why it matters here</th></tr></thead>
+            <thead><tr><th>Specification</th><th>Value</th><th>Effect on the survey</th></tr></thead>
             <tbody>
               <tr class="burn"><td>Pulse repetition</td><td>240 kHz single, 480 kHz double, 720 kHz triple</td><td>Sets point density on the ground</td></tr>
               <tr><td>Returns</td><td>Single first, single strongest, double, triple</td><td>Separates canopy from ground beneath it</td></tr>
-              <tr><td>Field of view</td><td>70.4&deg; horizontal &times; 4.5&deg; vertical</td><td>Sets swath width, and therefore line spacing</td></tr>
-              <tr><td>Beam divergence</td><td>0.28&deg; vertical &times; 0.03&deg; horizontal</td><td>Keeps the spot tight at range, so each point means one place</td></tr>
-              <tr><td>Roll and pitch</td><td>0.04&deg; RMSE</td><td>Aircraft attitude error propagates straight into point position</td></tr>
-              <tr><td>Heading</td><td>0.13&deg; RMSE</td><td>Same, and worse at the edge of the swath</td></tr>
-              <tr><td>Gyro bias instability</td><td>1.5&deg;/hr</td><td>Limits heading drift across an hour-long flight</td></tr>
-              <tr><td>Positional accuracy</td><td>0.01 m + 1 ppm CEP</td><td>Georeferences the cloud</td></tr>
-              <tr><td>Mass</td><td>730 g</td><td>The number the aircraft has to beat</td></tr>
+              <tr><td>Field of view</td><td>70.4&deg; horizontal &times; 4.5&deg; vertical</td><td>Sets swath width and therefore line spacing</td></tr>
+              <tr><td>Beam divergence</td><td>0.28&deg; vertical &times; 0.03&deg; horizontal</td><td>Keeps the spot tight at range</td></tr>
+              <tr><td>Roll and pitch</td><td>0.04&deg; RMSE</td><td>Attitude error propagates into point position</td></tr>
+              <tr><td>Heading</td><td>0.13&deg; RMSE</td><td>Same, increasing toward the swath edge</td></tr>
+              <tr><td>Gyro bias instability</td><td>1.5&deg;/hr</td><td>Limits heading drift over an hour-long flight</td></tr>
+              <tr><td>Positional accuracy</td><td>0.01 m + 1 ppm CEP</td><td>Georeferences the point cloud</td></tr>
+              <tr><td>Mass</td><td>730 g</td><td>Sets the aircraft payload requirement</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="note" data-rev>
-          <span class="k">Why the IMU is half the sensor</span>
-          <p>A LiDAR return is a range and a direction. The range comes from the laser, but the direction
-            comes from knowing exactly how the aircraft was oriented at the instant the pulse left. A tenth
-            of a degree of attitude error at 100 m of range is 17 cm of position error on the ground, and it
-            gets worse toward the edges of a 70&deg; swath. The inertial navigation system is what makes the
-            laser measurements mean anything.</p>
+          <span class="k">Attitude accuracy and point position</span>
+          <p>A LiDAR return provides a range and a direction. The range comes from the laser, but the direction
+            depends on knowing the orientation of the aircraft at the instant the pulse was emitted. A tenth
+            of a degree of attitude error at 100 m range corresponds to approximately 17 cm of position error
+            on the ground, increasing toward the edges of a 70&deg; swath. The inertial navigation system
+            accuracy is therefore as significant as the laser specification.</p>
         </div>
       </section>
 
       <!-- ============================================================ 03 -->
       <section id="aircraft">
-        <div class="sechead" data-rev><span class="n">03</span><h2>The aircraft that can carry it</h2></div>
-        <p data-rev>The WingtraOne Gen II carries 800 g on a modular payload mount, which leaves 70 g of margin
-          over the sensor. It flies for about an hour, which covers two square kilometres in a single sortie,
-          and it takes off and lands vertically before transitioning to fixed-wing flight.</p>
+        <div class="sechead" data-rev><span class="n">03</span><h2>Aircraft selection</h2></div>
+        <p data-rev>The WingtraOne Gen II carries up to 800 g on a modular payload mount, leaving 70 g of margin
+          over the sensor. It provides approximately one hour of flight time, sufficient to cover two square
+          kilometres in a single sortie, and takes off and lands vertically before transitioning to fixed-wing
+          flight.</p>
 
         <figure data-rev>
           <img src="../figures/banff-aircraft.png" alt="Exploded view of the WingtraOne Gen II showing the tail-sitter VTOL fixed-wing configuration and modular payload bay">
           <figcaption><b>Figure 1 &middot; WingtraOne Gen II</b>
-            A tail-sitter that takes off vertically and transitions to wing-borne flight. The modular payload
-            bay is what makes the sensor choice in section 02 possible.</figcaption>
+            A tail-sitter configuration that takes off vertically and transitions to wing-borne flight. The
+            modular payload bay accommodates the sensor selected in section 02.</figcaption>
         </figure>
 
-        <p data-rev>Both halves of that configuration are load-bearing for this mission. Vertical takeoff matters
-          because there is nowhere in a valley in Banff to put a runway. Fixed-wing cruise matters because a
-          multirotor holding station for an hour would not cover the area, and because a wing gives the steady
-          platform a scanning LiDAR needs. Attitude noise shows up directly in the point cloud, so an airframe
-          that rides smoothly is worth as much as a better IMU.</p>
+        <p data-rev>Both parts of the configuration are required for this mission. Vertical takeoff is necessary
+          because the valley has no space for a conventional runway. Fixed-wing cruise is necessary because a
+          multirotor could not cover the area within its endurance, and because a wing provides the stable
+          platform a scanning LiDAR requires. Attitude noise appears directly in the point cloud, so airframe
+          stability contributes as much to data quality as sensor specification.</p>
 
-        <p data-rev>The weather window comes from the same argument. Flying June to August puts average wind
-          between 1.61 and 2.1 m/s, against an aircraft rated to 12 m/s sustained and 18 m/s gusts. That is a
-          wide margin on paper, and the reason to keep it wide is that gusts move the aircraft faster than the
-          autopilot corrects, and every one of those excursions lands in the data.</p>
+        <p data-rev>The survey window is June to August, when average wind speed is between 1.61 and 2.1 m/s
+          against an aircraft rated for 12 m/s sustained wind and 18 m/s gusts. The margin is kept wide because
+          gusts displace the aircraft faster than the autopilot corrects, and those excursions appear in the
+          data.</p>
       </section>
 
       <!-- ============================================================ 04 -->
       <section id="patterns">
-        <div class="sechead" data-rev><span class="n">04</span><h2>Two patterns, one flight</h2></div>
-        <p class="lead" data-rev>The site was split into three by terrain type, and flown as two survey patterns
-          at two altitudes, both in a single sortie.</p>
+        <div class="sechead" data-rev><span class="n">04</span><h2>Survey patterns</h2></div>
+        <p class="lead" data-rev>The site was divided by terrain type and flown as two survey patterns at two
+          altitudes, both within a single sortie.</p>
 
-        <h3 data-rev>First pattern, over the river and forest</h3>
-        <p data-rev>The valley floor is close to uniform, so it gets a zig-zag at 90&deg; with minimal overlap,
-          held at 1,700 m above sea level, which is roughly 100 m above the terrain. Ground speed is 40 km/h,
-          slower than the aircraft would normally cruise, because a slower pass puts more pulses on the same
-          patch of ground and the fine structure of the forest and the riverbank is the thing worth resolving.</p>
+        <h3 data-rev>First pattern, river and forest</h3>
+        <p data-rev>The valley floor is close to uniform, so it is surveyed with a zig-zag pattern at 90&deg; with
+          minimal overlap, held at 1,700 m above sea level, approximately 100 m above the terrain. Ground speed
+          is 40 km/h, below the aircraft's normal cruise, because a slower pass increases pulse density on the
+          ground and the fine structure of the forest and riverbank is the feature of interest.</p>
 
         <figure class="wide" data-rev>
           <img src="../figures/banff-survey-1.jpg" alt="Survey grid over the Bow River valley showing the zig-zag flight path and launch point">
           <figcaption><b>Figure 2 &middot; First pattern</b>
-            The zig-zag over the valley floor. Line spacing is set by the sensor swath rather than picked,
-            which is what section 02's field of view number is for.</figcaption>
+            The zig-zag pattern over the valley floor. Line spacing is set from the sensor swath rather than
+            selected, using the field of view figure from section 02.</figcaption>
         </figure>
 
-        <h3 data-rev>Second pattern, over the mountain</h3>
-        <p data-rev>The mountainous section is flown at 2,230 m above sea level, again about 100 m above the
-          terrain, at 30 to 35 km/h. Two things about it were deliberate.</p>
+        <h3 data-rev>Second pattern, mountainous section</h3>
+        <p data-rev>The mountainous section is surveyed at 2,230 m above sea level, again approximately 100 m
+          above the terrain, at 30 to 35 km/h. Two aspects of the pattern were chosen deliberately.</p>
 
-        <p data-rev>It starts at the far end, near the peak, and works back down toward the base where the launch
-          site is. Flying downhill on the return means the aircraft is descending through the most demanding
-          part of the survey rather than climbing, which leaves reserve battery at the end of the sortie
-          instead of spending it. If a section comes back badly covered, there is enough left to go back over
-          it.</p>
+        <p data-rev>The pattern starts at the far end near the peak and works back toward the base, where the
+          launch site is located. Descending through the return leg rather than climbing is more battery
+          efficient, which leaves reserve capacity at the end of the sortie. If a section returns poor coverage,
+          there is enough remaining to resurvey it.</p>
 
-        <p data-rev>The speed drops again, to 30 to 35 km/h, because broken ground needs more points per square
-          metre than flat ground does. A rock face angled away from the aircraft receives pulses at a shallow
-          incidence and returns fewer of them, so the way to keep density up across the whole surface is to
-          slow down.</p>
+        <p data-rev>Ground speed is reduced to 30 to 35 km/h because uneven terrain requires higher point density
+          than flat terrain. A rock face angled away from the aircraft receives pulses at shallow incidence and
+          returns fewer of them, so reducing speed maintains density across the whole surface.</p>
 
         <figure class="wide" data-rev>
           <img src="../figures/banff-survey-2.jpg" alt="Survey grid over the mountainous section with the flight path running from the peak down toward the launch site">
           <figcaption><b>Figure 3 &middot; Second pattern</b>
-            The mountain section, flown from the top down. Same nominal standoff of 100 m above ground, 530 m
-            higher in absolute altitude.</figcaption>
+            The mountainous section, flown from the peak down to the base. The same nominal 100 m standoff
+            above terrain, 530 m higher in absolute altitude.</figcaption>
         </figure>
 
         <div class="tw" data-rev>
@@ -421,54 +421,53 @@ footer a:hover{color:var(--accent)}
           </table>
         </div>
 
-        <p data-rev>The two absolute altitudes differ by 530 m and the height above ground is the same in both.
-          That is the whole point of splitting the site: a single-altitude survey would have been 100 m over
-          one half and 600 m over the other, and the point density would have collapsed across the transition.</p>
+        <p data-rev>The two absolute altitudes differ by 530 m while the height above ground is the same in both.
+          This is the reason for splitting the site: a single-altitude survey would have been 100 m above one
+          half and approximately 600 m above the other, and point density would have dropped substantially
+          across the transition.</p>
 
-        <p data-rev>The aircraft finishes the first pattern, climbs, transits to the peak and begins the second.
-          Line spacing in both was set by simulating the LiDAR field of view in STK and reading off the swath
-          width at the planned standoff, rather than by choosing an overlap percentage and hoping.</p>
+        <p data-rev>The aircraft completes the first pattern, climbs, transits to the peak and begins the second.
+          Line spacing in both patterns was set by simulating the LiDAR field of view in STK and taking the
+          swath width at the planned standoff, rather than by selecting an overlap percentage.</p>
       </section>
 
       <!-- ============================================================ 05 -->
       <section id="processing">
-        <div class="sechead" data-rev><span class="n">05</span><h2>From returns to terrain</h2></div>
-        <p data-rev>The aircraft comes back with a card full of ranges and attitudes. Six steps turn that into
-          something a park planner can use.</p>
+        <div class="sechead" data-rev><span class="n">05</span><h2>Data processing</h2></div>
+        <p data-rev>Six steps convert the raw LiDAR data into terrain products usable for planning:</p>
 
         <ul data-rev>
-          <li><strong>Extract</strong> &middot; pull the raw data off the card onto a machine that can process it</li>
-          <li><strong>Clean</strong> &middot; filter noise and drop returns that are not wanted for the surface being modelled, such as vegetation when the ground is what matters</li>
-          <li><strong>Classify</strong> &middot; sort the cloud into ground, forest, water and rock</li>
-          <li><strong>Model</strong> &middot; a digital elevation model for the mountain, a canopy height model for the forest</li>
-          <li><strong>Integrate</strong> &middot; patch the data sets together and analyse the combined terrain for buildable ground</li>
-          <li><strong>Assess</strong> &middot; plan trails and infrastructure against soil stability, vegetation cover and water</li>
+          <li><strong>Extract</strong> &middot; transfer the data from the onboard card to a processing machine</li>
+          <li><strong>Clean</strong> &middot; filter noise and remove returns not required for the surface being modelled, such as vegetation when modelling ground surface</li>
+          <li><strong>Classify</strong> &middot; sort the point cloud into ground, forest, water and mountainous terrain</li>
+          <li><strong>Model</strong> &middot; produce a digital elevation model for the mountainous section and a canopy height model for the forest</li>
+          <li><strong>Integrate</strong> &middot; patch the data sets together and analyse the combined terrain to identify suitable ground</li>
+          <li><strong>Assess</strong> &middot; plan trails and infrastructure against soil stability, vegetation cover and water bodies</li>
         </ul>
 
-        <p data-rev>The multi-return capability from section 02 is what makes steps two and four possible at all.
-          A first return off the canopy and a later return off the ground beneath it, from the same pulse, is
-          how a forested slope gets both a canopy height model and a bare-earth elevation model out of one
-          flight.</p>
+        <p data-rev>The multi-return capability described in section 02 is what makes steps two and four possible.
+          A first return from the canopy and a later return from the ground beneath it, from the same pulse,
+          produces both a canopy height model and a bare-earth elevation model from a single flight.</p>
       </section>
 
       <!-- ============================================================ 06 -->
       <section id="permission">
-        <div class="sechead" data-rev><span class="n">06</span><h2>Permission to fly in a national park</h2></div>
-        <p class="lead" data-rev>Two separate approvals are needed, and they are not from the same body.</p>
+        <div class="sechead" data-rev><span class="n">06</span><h2>Regulatory approvals</h2></div>
+        <p class="lead" data-rev>Operating in a national park requires two separate approvals from two different
+          authorities.</p>
 
-        <p data-rev>Transport Canada is the first, and clearing it means a Safety Assurance Integrity Level
-          determination. Ground risk starts from the energy the aircraft carries:</p>
+        <p data-rev>The first is Transport Canada, which requires a Safety Assurance Integrity Level
+          determination. Ground risk is derived from the kinetic energy of the aircraft:</p>
 
         <div class="eq" data-rev>
           <span class="tex">KE = \tfrac{1}{2}mv^{2} = \tfrac{1}{2}(3.7)(16)^{2} = 473.6\ \text{J}</span>
           <span class="cap">m is the aircraft mass at 3.7 kg, v the cruise velocity at 16 m/s.</span>
         </div>
 
-        <p data-rev>That energy puts the intrinsic ground risk class at <strong>4</strong>. The air risk class
-          comes out of the decision tree at <strong>ARC-c</strong>. Together they give a total of
-          <strong>SAIL IV</strong>, which is a materially heavier assurance burden than the SAIL II of the lake
-          survey, and the reason is the terrain rather than the aircraft: flying over a national park is not
-          flying over water.</p>
+        <p data-rev>This gives an intrinsic ground risk class of <strong>4</strong>. The air risk class from the
+          decision tree is <strong>ARC-c</strong>. Together these give a total of <strong>SAIL IV</strong>, a
+          higher assurance burden than the SAIL II of the lake survey in project 04. The difference is driven by
+          the operating environment rather than the aircraft.</p>
 
         <figure data-rev>
           <img src="../figures/banff-arc.png" alt="Air risk class decision tree with the path for this operation ending at ARC-c">
@@ -476,33 +475,31 @@ footer a:hover{color:var(--accent)}
             The path through the decision tree for this operation.</figcaption>
         </figure>
 
-        <p data-rev>The site also sits close to both a heliport and an airfield, so the operation carries a
-          standing obligation to stay in contact with both and exchange traffic information for the whole
-          duration of the flight. That is a procedural mitigation rather than a design one, and it has to be
-          in the plan because no amount of aircraft capability removes it.</p>
+        <p data-rev>The survey site is also close to a heliport and an airfield, so the operation requires the
+          operator to remain in contact with both and exchange traffic information for the duration of the
+          flight. This is a procedural mitigation and has to be included in the operating plan.</p>
 
         <p data-rev>The second approval is a <strong>Restricted Activity Permit</strong> from the park
-          Superintendent, which is a separate process from the aviation regulator and answers a different
-          question: not whether the flight is safe, but whether it is acceptable inside a protected area.</p>
+          Superintendent. This is separate from the aviation regulator and addresses whether the activity is
+          acceptable within a protected area rather than whether the flight is safe.</p>
 
-        <h3 data-rev>Environmental constraints</h3>
-        <p data-rev>Three commitments carry that argument. Flights are scheduled around nesting and migration so
-          the survey does not coincide with the periods when disturbance costs most, and the WingtraOne is
-          quiet enough in cruise that overhead noise reads as a distant hum. Flight paths are planned to
-          minimise time over sensitive ecosystems rather than simply to minimise flight time. And the sensor
-          choice itself is part of the environmental case: a wide field of view and high precision means fewer
-          lines, a shorter flight and less time in the air over the park.</p>
+        <h3 data-rev>Environmental considerations</h3>
+        <p data-rev>Three measures support the permit application. Flights are scheduled to avoid nesting and
+          migration periods, when disturbance has the greatest effect, and the WingtraOne produces minimal
+          overhead flight noise. Flight paths are planned to minimise time spent over sensitive ecosystems.
+          Sensor selection also contributes: a wide field of view and high precision reduces the number of
+          survey lines required, shortening the flight and reducing total time over the park.</p>
       </section>
 
       <!-- ============================================================ 07 -->
       <section id="detection">
-        <div class="sechead" data-rev><span class="n">07</span><h2>What the imagery can actually resolve</h2></div>
-        <p class="lead" data-rev>Covering the ground is one question. Being able to tell what is on it is a
-          different one, and it has a number.</p>
+        <div class="sechead" data-rev><span class="n">07</span><h2>Imagery resolution</h2></div>
+        <p class="lead" data-rev>Covering the ground and being able to identify what is on it are separate
+          questions, and the second one can be quantified.</p>
 
         <p data-rev>The Johnson criteria relate the number of resolvable cycles across a target to the
-          probability of detecting, recognising or identifying it. For a target 180 by 80 cm at a ground
-          sample distance of 33 cm, the characteristic dimension and cycle count are:</p>
+          probability of detecting, recognising or identifying it. For a target 180 by 80 cm at a ground sample
+          distance of 33 cm, the characteristic dimension and cycle count are:</p>
 
         <div class="eq" data-rev>
           <span class="tex">d_c = \sqrt{w \cdot h} = \sqrt{180 \cdot 80} = 120\ \text{cm}, \qquad N = \frac{d_c}{2 \cdot GSD} = \frac{120}{2 \cdot 33} = 1.818</span>
@@ -527,37 +524,35 @@ footer a:hover{color:var(--accent)}
           </table>
         </div>
 
-        <p data-rev>The shape of that result is the useful part. At this ground sample distance you can say with
-          near certainty that something is there, you will be wrong more than four times out of five about what
-          class of thing it is, and you have essentially no chance of identifying it specifically. A survey
-          designed to find objects and a survey designed to identify them are not the same survey, and the
-          difference is resolution rather than effort.</p>
+        <p data-rev>At this ground sample distance the imagery reliably establishes that an object is present,
+          identifies its class correctly less than one time in five, and rarely identifies the specific object.
+          A survey designed to locate objects and a survey designed to identify them require different
+          resolution, and the difference is not addressed by additional flight time.</p>
       </section>
 
       <!-- ============================================================ 08 -->
       <section id="limits">
         <div class="sechead" data-rev><span class="n">08</span><h2>Limitations</h2></div>
-        <p class="lead" data-rev>This is a plan. Nothing was flown and no point cloud exists.</p>
+        <p class="lead" data-rev>This is a survey plan. No flight was conducted and no point cloud was
+          produced.</p>
 
-        <p data-rev>The line spacing is derived from the sensor field of view simulated in STK at a nominal
-          100 m standoff. Real terrain does not hold a constant standoff between waypoints, so the actual
-          swath varies along every line and the overlap margin is thinner in places than the plan implies. A
-          terrain-following profile rather than a constant-altitude one would fix that, at the cost of a much
-          harder flight plan.</p>
+        <p data-rev>Line spacing is derived from the sensor field of view simulated in STK at a nominal 100 m
+          standoff. Real terrain does not hold a constant standoff between waypoints, so the actual swath varies
+          along each line and the overlap margin is narrower in places than the plan assumes. A terrain-following
+          altitude profile would correct this at the cost of a more complex flight plan.</p>
 
-        <p data-rev>The point density figures follow from the pulse repetition rate and the ground speed, and
-          assume returns come back. Water returns almost nothing to a LiDAR at these wavelengths, and the Bow
-          River is inside the survey area, so the coverage over the river will be sparse in a way the plan
-          does not model.</p>
+        <p data-rev>Point density figures follow from the pulse repetition rate and ground speed, and assume
+          returns are received. Water returns very little at these wavelengths and the Bow River is inside the
+          survey area, so coverage over the river will be sparse in a way the plan does not model.</p>
 
-        <p data-rev>The environmental argument is stated rather than assessed. Scheduling around nesting and
-          migration is the right instinct, but which species, which weeks and what separation distance is a
-          question for a park biologist and it is not answered here.</p>
+        <p data-rev>The environmental measures are stated rather than assessed. Scheduling around nesting and
+          migration is the correct approach, but the specific species, dates and separation distances would
+          require input from a park biologist and are not determined here.</p>
 
-        <p data-rev>This work came out of a broader exam that also covered system reliability, aircraft state
-          estimation and a lift-to-drag estimate. The last of those produced an L/D of 2.31 for a light single,
-          which is far too low to be right and is a consequence of estimating both lift and drag coefficients
-          from assumed reference values. It is on the record as a bad answer rather than a quiet one.</p>
+        <p data-rev>This work formed part of a broader exam that also covered system reliability, aircraft state
+          estimation and a lift-to-drag estimate. The lift-to-drag calculation returned 2.31 for a light single,
+          which is too low to be correct and results from estimating both lift and drag coefficients from
+          assumed reference values.</p>
       </section>
 
       <div class="pageend" data-rev>
