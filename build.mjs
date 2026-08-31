@@ -98,6 +98,19 @@ const PAGES = [
     canonical: '/work/whale-survey/'
   },
   {
+    src: 'src/work-banff.html',
+    entry: 'src/page.js',
+    out: 'work/banff-lidar/index.html',
+    base: '../../',
+    title: 'Two passes over Banff | Anshuman Vyas',
+    description:
+      'Planning a LiDAR topographical survey of two square kilometres of Banff National Park: sensor ' +
+      'selection driven by pulse rate and field of view, a WingtraOne Gen II sized to carry it, two survey ' +
+      'patterns at different altitudes holding a constant standoff above terrain, and a SAIL IV safety case.',
+    image: 'og.png',
+    canonical: '/work/banff-lidar/'
+  },
+  {
     src: 'src/viewer-arm.html',
     entry: 'src/viewer-arm.js',
     out: 'work/capture-manipulator/viewer/index.html',

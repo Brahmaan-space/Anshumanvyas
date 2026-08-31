@@ -240,75 +240,194 @@ function objSlot() {
   return g;
 }
 
-// 04 lake survey: operational volume, survey track and the aircraft flying it
+// 04 lake survey: nested containment volumes, a lawnmower track over water, boat below
 function objSurvey() {
   const g = new Group();
-  const dot = new SphereGeometry(0.011, 8, 6);
-  const dotMat = new MeshBasicMaterial({ color: PAL.accent, transparent: true, opacity: 0.85 });
+  const FLOOR = -0.23;
 
-  // the lake, a closed loop under the track
+  // the lake, an irregular closed loop rather than a clean ellipse
   const lake = [];
-  for (let i = 0; i <= 72; i++) {
-    const a = (i / 72) * Math.PI * 2;
-    lake.push(new Vector3(Math.cos(a) * 0.15, -0.19, Math.sin(a) * 0.33));
+  for (let i = 0; i <= 96; i++) {
+    const a = (i / 96) * Math.PI * 2;
+    const r = 1 + Math.sin(a * 3) * 0.11 + Math.sin(a * 5 + 1.2) * 0.07;
+    lake.push(new Vector3(Math.cos(a) * 0.135 * r, FLOOR, Math.sin(a) * 0.35 * r));
   }
-  g.add(new Line(new BufferGeometry().setFromPoints(lake), lineMat(PAL.accent, 0.45)));
+  g.add(new Line(new BufferGeometry().setFromPoints(lake), lineMat(PAL.accent, 0.6)));
+  const water = new Mesh(new BoxGeometry(0.25, 0.003, 0.64),
+    new MeshBasicMaterial({ color: 0x0a2836, transparent: true, opacity: 0.5 }));
+  water.position.y = FLOOR - 0.003;
+  g.add(water);
 
-  // flight geography plus contingency volume
-  g.add(new LineSegments(new EdgesGeometry(new BoxGeometry(0.60, 0.44, 0.84)), lineMat(PAL.amber, 0.26)));
+  // flight geography inside, contingency volume outside
+  g.add(new LineSegments(new EdgesGeometry(new BoxGeometry(0.40, 0.30, 0.78)), lineMat(PAL.accent, 0.32)));
+  g.add(new LineSegments(new EdgesGeometry(new BoxGeometry(0.58, 0.44, 0.92)), lineMat(PAL.amber, 0.22)));
 
-  // survey track with waypoints on it
-  const P = (u) => new Vector3(Math.sin(u * Math.PI * 2) * 0.15, 0.02, (u - 0.5) * 0.68);
-  const track = [];
-  for (let i = 0; i <= 90; i++) track.push(P(i / 90));
-  g.add(new Line(new BufferGeometry().setFromPoints(track), lineMat(PAL.ink, 0.34)));
-  for (let i = 0; i <= 8; i++) {
-    const s = new Mesh(dot, dotMat); s.position.copy(P(i / 8)); g.add(s);
-  }
+  // survey track: serpentine lawnmower pattern across the lake
+  const LEGS = 5;
+  const P = (u) => new Vector3(Math.sin(u * Math.PI * LEGS) * 0.175, 0.0, (u - 0.5) * 0.60);
+  const pts = [];
+  for (let i = 0; i <= 220; i++) pts.push(P(i / 220));
+  g.add(new Line(new BufferGeometry().setFromPoints(pts), lineMat(PAL.ink, 0.3)));
 
-  const craft = new Mesh(new BoxGeometry(0.05, 0.014, 0.085), new MeshBasicMaterial({ color: PAL.amber }));
+  const wp = new SphereGeometry(0.0095, 8, 6);
+  const wpMat = new MeshBasicMaterial({ color: PAL.accent, transparent: true, opacity: 0.8 });
+  for (let i = 0; i <= 10; i++) { const s = new Mesh(wp, wpMat); s.position.copy(P(i / 10)); g.add(s); }
+
+  // aircraft, and the sensor footprint it drags across the water
+  const craft = new Mesh(new BoxGeometry(0.055, 0.013, 0.085), new MeshBasicMaterial({ color: PAL.amber }));
   g.add(craft);
+  const beamH = Math.abs(0.0 - FLOOR);
+  const beam = new Mesh(new CylinderGeometry(0.004, 0.055, beamH, 10, 1, true),
+    new MeshBasicMaterial({ color: PAL.amber, transparent: true, opacity: 0.3, blending: AdditiveBlending, depthWrite: false }));
+  g.add(beam);
+
+  // the sampling boat, working the lake underneath
+  const boat = new Mesh(new BoxGeometry(0.03, 0.008, 0.045), new MeshBasicMaterial({ color: PAL.accent }));
+  boat.position.y = FLOOR + 0.008;
+  g.add(boat);
+
   g.userData.tick = (t) => {
-    const u = (t * 0.12) % 1;
-    craft.position.copy(P(u));
-    craft.rotation.y = Math.cos(u * Math.PI * 2) * 0.5;
-    g.rotation.y = Math.sin(t * 0.11) * 0.3 + 0.3;
+    const u = (t * 0.075) % 1;
+    const p = P(u);
+    craft.position.copy(p);
+    craft.rotation.y = Math.cos(u * Math.PI * LEGS) * 0.9;
+    beam.position.set(p.x, FLOOR + beamH / 2, p.z);
+    const b = (t * 0.045) % 1;
+    boat.position.x = Math.sin(b * Math.PI * 2) * 0.07;
+    boat.position.z = (b - 0.5) * 0.5;
+    boat.rotation.y = Math.cos(b * Math.PI * 2) * 0.5;
+    g.rotation.y = Math.sin(t * 0.1) * 0.28 + 0.32;
   };
   return g;
 }
 
-// 05 three aircraft on deconflicted routes at separated altitudes
+// 05 three aircraft at separated altitudes, sensor footprints sweeping the bay
 function objFleet() {
   const g = new Group();
+  const SEA = -0.28;
   const cols = [PAL.accent, PAL.amber, PAL.violet];
-  const dot = new SphereGeometry(0.009, 8, 6);
+
+  // the bay
+  const sea = new Mesh(new BoxGeometry(0.66, 0.003, 0.60),
+    new MeshBasicMaterial({ color: 0x08202c, transparent: true, opacity: 0.45 }));
+  sea.position.y = SEA;
+  g.add(sea);
+  const grid = [];
+  for (let i = 0; i <= 6; i++) {
+    const x = (i / 6 - 0.5) * 0.66;
+    grid.push(new Vector3(x, SEA, -0.30), new Vector3(x, SEA, 0.30));
+    const z = (i / 6 - 0.5) * 0.60;
+    grid.push(new Vector3(-0.33, SEA, z), new Vector3(0.33, SEA, z));
+  }
+  g.add(new LineSegments(new BufferGeometry().setFromPoints(grid), lineMat(PAL.dim, 0.5)));
+
+  // whale pods scattered on the surface
+  const pod = new SphereGeometry(0.011, 8, 6);
+  const podMat = new MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0.5 });
+  const seed = [[-0.21, 0.14], [0.06, -0.19], [0.19, 0.08], [-0.09, -0.05], [0.24, -0.11], [-0.26, -0.16]];
+  seed.forEach(([x, z]) => { const s = new Mesh(pod, podMat); s.position.set(x, SEA + 0.006, z); g.add(s); });
+
   const craft = [];
   for (let k = 0; k < 3; k++) {
-    const amp = 0.13 + k * 0.05, ph = k * 0.9, y = -0.13 + k * 0.13, len = 0.62;
+    const amp = 0.115 + k * 0.055, ph = k * 1.05, y = SEA + 0.15 + k * 0.10, len = 0.56 - k * 0.05;
     const P = (u) => new Vector3(Math.sin(u * Math.PI * 2 + ph) * amp, y, (u - 0.5) * len);
     const pts = [];
-    for (let i = 0; i <= 90; i++) pts.push(P(i / 90));
-    g.add(new Line(new BufferGeometry().setFromPoints(pts), lineMat(cols[k], 0.45)));
-    const dm = new MeshBasicMaterial({ color: cols[k], transparent: true, opacity: 0.8 });
-    for (let i = 0; i <= 6; i++) { const s = new Mesh(dot, dm); s.position.copy(P(i / 6)); g.add(s); }
-    const mm = new Mesh(new BoxGeometry(0.042, 0.011, 0.07), new MeshBasicMaterial({ color: cols[k] }));
+    for (let i = 0; i <= 110; i++) pts.push(P(i / 110));
+    g.add(new Line(new BufferGeometry().setFromPoints(pts), lineMat(cols[k], 0.5)));
+
+    const mm = new Mesh(new BoxGeometry(0.046, 0.011, 0.072), new MeshBasicMaterial({ color: cols[k] }));
     g.add(mm);
-    craft.push({ mm, P, ph, sp: 0.1 + k * 0.02 });
+
+    // sensor footprint sweeping the water under each aircraft
+    const h = y - SEA;
+    const beam = new Mesh(new CylinderGeometry(0.003, 0.052 + k * 0.012, h, 10, 1, true),
+      new MeshBasicMaterial({ color: cols[k], transparent: true, opacity: 0.26, blending: AdditiveBlending, depthWrite: false }));
+    g.add(beam);
+    const ring = [];
+    for (let i = 0; i <= 28; i++) {
+      const a = (i / 28) * Math.PI * 2;
+      ring.push(new Vector3(Math.cos(a) * (0.052 + k * 0.012), 0, Math.sin(a) * (0.052 + k * 0.012)));
+    }
+    const foot = new Line(new BufferGeometry().setFromPoints(ring), lineMat(cols[k], 0.45));
+    g.add(foot);
+
+    craft.push({ mm, beam, foot, P, ph, h, sp: 0.085 + k * 0.016 });
   }
+
   g.userData.tick = (t) => {
     craft.forEach((c) => {
       const u = (t * c.sp) % 1;
-      c.mm.position.copy(c.P(u));
-      c.mm.rotation.y = Math.cos(u * Math.PI * 2 + c.ph) * 0.6;
+      const p = c.P(u);
+      c.mm.position.copy(p);
+      c.mm.rotation.y = Math.cos(u * Math.PI * 2 + c.ph) * 0.7;
+      c.beam.position.set(p.x, SEA + c.h / 2, p.z);
+      c.foot.position.set(p.x, SEA + 0.004, p.z);
     });
-    g.rotation.y = Math.sin(t * 0.1) * 0.34 + 0.28;
+    g.rotation.y = Math.sin(t * 0.095) * 0.3 + 0.3;
+  };
+  return g;
+}
+
+// 06 lidar terrain survey: aircraft scanning a ridge at constant height above ground
+function objTerrain() {
+  const g = new Group();
+  const H = (x, z) => -0.10 + Math.exp(-((x + 0.10) * (x + 0.10) * 14 + z * z * 2.2)) * 0.30
+                     + Math.sin(x * 5.5) * 0.018 + Math.cos(z * 4.0) * 0.014 - 0.16;
+
+  // terrain as a wireframe grid
+  const seg = [], N = 16, SX = 0.62, SZ = 0.60;
+  for (let i = 0; i <= N; i++) {
+    for (let j = 0; j < N; j++) {
+      const x0 = (i / N - 0.5) * SX, z0 = (j / N - 0.5) * SZ, z1 = ((j + 1) / N - 0.5) * SZ;
+      seg.push(new Vector3(x0, H(x0, z0), z0), new Vector3(x0, H(x0, z1), z1));
+      const xa = (j / N - 0.5) * SX, xb = ((j + 1) / N - 0.5) * SX, zc = (i / N - 0.5) * SZ;
+      seg.push(new Vector3(xa, H(xa, zc), zc), new Vector3(xb, H(xb, zc), zc));
+    }
+  }
+  g.add(new LineSegments(new BufferGeometry().setFromPoints(seg), lineMat(PAL.dim, 0.85)));
+
+  // returns accumulating on the surface
+  const NP = 260, pos = new Float32Array(NP * 3);
+  for (let i = 0; i < NP; i++) {
+    const x = (Math.random() - 0.5) * SX, z = (Math.random() - 0.5) * SZ;
+    pos[i * 3] = x; pos[i * 3 + 1] = H(x, z) + 0.004; pos[i * 3 + 2] = z;
+  }
+  const cloud = new BufferGeometry();
+  cloud.setAttribute('position', new BufferAttribute(pos, 3));
+  g.add(new Points(cloud, new PointsMaterial({ color: PAL.accent, size: 0.016, transparent: true, opacity: 0.75, depthWrite: false })));
+
+  // aircraft holding a constant offset above the terrain
+  const STAND = 0.135, LEGS = 4;
+  const P = (u) => {
+    const x = Math.sin(u * Math.PI * LEGS) * 0.26;
+    const z = (u - 0.5) * SZ * 0.92;
+    return new Vector3(x, H(x, z) + STAND, z);
+  };
+  const path = [];
+  for (let i = 0; i <= 240; i++) path.push(P(i / 240));
+  g.add(new Line(new BufferGeometry().setFromPoints(path), lineMat(PAL.amber, 0.4)));
+
+  const craft = new Mesh(new BoxGeometry(0.055, 0.012, 0.08), new MeshBasicMaterial({ color: PAL.amber }));
+  g.add(craft);
+  const fan = new Mesh(new CylinderGeometry(0.003, 0.075, STAND, 4, 1, true),
+    new MeshBasicMaterial({ color: PAL.accent, transparent: true, opacity: 0.3, blending: AdditiveBlending, depthWrite: false }));
+  g.add(fan);
+
+  g.userData.tick = (t) => {
+    const u = (t * 0.07) % 1;
+    const p = P(u);
+    craft.position.copy(p);
+    craft.rotation.y = Math.cos(u * Math.PI * LEGS) * 1.0;
+    fan.position.set(p.x, p.y - STAND / 2, p.z);
+    fan.rotation.y = craft.rotation.y;
+    g.rotation.y = Math.sin(t * 0.09) * 0.26 + 0.36;
   };
   return g;
 }
 
 // each focus object gets a wrapper so the fade-scale never fights its base transform
-const FOCUS_FIT = [[0.94, 0.02], [0.74, -0.26], [0.70, -0.04], [0.86, 0.00], [0.82, 0.00]];
-const focusObjs = [objOrbit(), objArm(), objCloud(), objSurvey(), objFleet()].map((inner, i) => {
+const FOCUS_FIT = [[0.94, 0.02], [0.74, -0.26], [0.70, -0.04], [0.92, 0.04], [0.88, 0.04], [0.80, 0.02]];
+const focusObjs = [objOrbit(), objArm(), objCloud(), objSurvey(), objFleet(), objTerrain()].map((inner, i) => {
   const w = new Group();
   inner.scale.setScalar(FOCUS_FIT[i][0]);
   inner.position.y = FOCUS_FIT[i][1];
